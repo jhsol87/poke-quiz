@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>마블 히어로 출동! - 모션 게임</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+    body, html { width: 100%; height: 100%; overflow: hidden; background: #050510; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    #game-container { position: relative; width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center; }
+    canvas { display: block; background: #000; box-shadow: 0 0 30px rgba(0, 240, 255, 0.3); border-radius: 12px; }
+    video { display: none; }
+    
+    #start-overlay {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(5, 8, 20, 0.92);
+      display: flex; flex-direction: column; justify-content: center; align-items: center;
+      color: #fff; z-index: 10; backdrop-filter: blur(8px);
+    }
+    #start-btn {
+      margin-top: 24px; padding: 18px 48px; font-size: 28px; font-weight: 800;
+      color: #fff; background: linear-gradient(135deg, #ff0055, #ff5500);
+      border: none; border-radius: 50px; cursor: pointer;
+      box-shadow: 0 0 25px rgba(255, 85, 0, 0.6);
+      transition: all 0.2s ease; animation: pulse 1.5s infinite;
+    }
+    #start-btn:hover { transform: scale(1.08); box-shadow: 0 0 40px rgba(255, 85, 0, 0.9); }
+    @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+    .instructions {
+      margin-top: 20px; font-size: 18px; color: #a0c0ff; text-align: center; line-height: 1.6;
+      background: rgba(255,255,255,0.05); padding: 15px 25px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);
+    }
+  </style>
+</head>
+<body>
+
+  <div id="game-container">
+    <video id="webcam" autoplay playsinline muted></video>
+    <canvas id="gameCanvas"></canvas>
+    
+    <div id="start-overlay">
+      <h1 style="font-size: 42px; color: #00f0ff; text-shadow: 0 0 20px #00f0ff; letter-spacing: 2px;">⚡ 어벤져스: 히어로 변신 특훈!</h1>
+      <div class="instructions">
+        <p>📷 <b>카메라로부터 1.5m ~ 2m 정도 떨어져서 전신이 보이게 서주세요!</b></p>
+        <p>🛡️ 몸을 좌우로 움직여 장애물을 피하고, 양팔을 뻗어 적을 무찌르세요.</p>
+      </div>
+      <button id="start-btn">카메라 연결 및 준비하기 🚀</button>
+    </div>
+  </div>
+
+  <script>
+    const video = document.getElementById('webcam');
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const startOverlay = document.getElementById('start-overlay');
+    const startBtn = document.getElementById('start-btn');
+
+    let gameState = 'IDLE'; // IDLE, CALIBRATING, PLAYING
+    let calibrationTimer = 3;
+    let score = 0;
+    let lives = 3;
+    let frameCount = 0;
+    let shakeTime = 0;
+
+    const player = { x: 0.5, y: 0.7 };
+    
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playSound(type) {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      const now = audioCtx.currentTime;
+
+      if (type === 'laser') {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(800, now);
+        osc.frequency.exponentialRampToValueAtTime(100, now + 0.2);
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.2);
+        osc.start(now); osc.stop(now + 0.2);
+      } else if (type === 'explosion') {
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(150, now);
+        osc.frequency.exponentialRampToValueAtTime(30, now + 0.3);
+        gain.gain.setValueAtTime(0.4, now);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.3);
+        osc.start(now); osc.stop(now + 0.3);
+      } else if (type === 'hit') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(120, now);
+        osc.frequency.exponentialRampToValueAtTime(40, now + 0.4);
+        gain.gain.setValueAtTime(0.5, now);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.4);
+        osc.start(now); osc.stop(now + 0.4);
+      } else if (type === 'beep') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(440, now);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.2);
+        osc.start(now); osc.stop(now + 0.2);
+      }
+    }
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    async function initCamera() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'user' }
+        });
+        video.srcObject = stream;
+        return new Promise((resolve) => {
+          video.onloadedmetadata = () => resolve(true);
+        });
+      } catch (e) {
+        alert("카메라 연결을 확인해 주세요. (방향키 및 Z, X키로 테스트 가능합니다)");
+        return false;
+      }
+    }
+
+    let obstacles = [];
+    let targets = [];
+    let particles = [];
+    let lasers = [];
+
+    function spawnEntities() {
+      if (frameCount % 90 === 0) {
+        obstacles.push({
+          x: Math.random() * 0.8 + 0.1,
+          y: -0.1,
+          speed: 0.005 + Math.random() * 0.003,
+          radius: 35
+        });
+      }
+      if (frameCount % 70 === 0) {
+        const isLeft = Math.random() < 0.5;
+        targets.push({
+          x: isLeft ? 0.15 : 0.85,
+          y: Math.random() * 0.4 + 0.2,
+          radius: 30,
+          side: isLeft ? 'left' : 'right'
+        });
+      }
+    }
+
+    const keys = {};
+    window.addEventListener('keydown', e => {
+      keys[e.code] = true;
+      if (gameState === 'PLAYING') {
+        if (e.code === 'KeyZ') triggerLaser('left');
+        if (e.code === 'KeyX') triggerLaser('right');
+      }
+    });
+    window.addEventListener('keyup', e => keys[e.code] = false);
+
+    function triggerLaser(side) {
+      playSound('laser');
+      const startX = side === 'left' ? player.x - 0.1 : player.x + 0.1;
+      const startY = player.y - 0.15;
+      const targetX = side === 'left' ? 0.05 : 0.95;
+      
+      lasers.push({
+        x1: startX, y1: startY,
+        x2: targetX, y2: startY - 0.1,
+        life: 1.0, side: side
+      });
+
+      targets.forEach((t, index) => {
+        if (t.side === side && Math.abs(t.y - startY) < 0.25) {
+          createExplosion(t.x * canvas.width, t.y * canvas.height, '#ff5500');
+          playSound('explosion');
+          targets.splice(index, 1);
+          score += 100;
+        }
+      });
+    }
+
+    function createExplosion(cx, cy, color) {
+      for (let i = 0; i < 20; i++) {
+        particles.push({
+          x: cx, y: cy,
+          vx: (Math.random() - 0.5) * 12,
+          vy: (Math.random() - 0.5) * 12,
+          life: 1.0, color: color, size: Math.random() * 8 + 4
+        });
+      }
+    }
+
+    function update() {
+      if (gameState !== 'PLAYING') return;
+      frameCount++;
+
+      if (keys['ArrowLeft']) player.x = Math.max(0.15, player.x - 0.015);
+      if (keys['ArrowRight']) player.x = Math.min(0.85, player.x + 0.015);
+
+      spawnEntities();
+
+      obstacles.forEach((obs, index) => {
+        obs.y += obs.speed;
+        const pdx = (obs.x - player.x) * canvas.width;
+        const pdy = (obs.y - player.y) * canvas.height;
+        const dist = Math.sqrt(pdx * pdx + pdy * pdy);
+
+        if (dist < obs.radius + 50) {
+          createExplosion(obs.x * canvas.width, obs.y * canvas.height, '#ff0055');
+          playSound('hit');
+          shakeTime = 15;
+          lives--;
+          obstacles.splice(index, 1);
+        } else if (obs.y > 1.1) {
+          obstacles.splice(index, 1);
+        }
+      });
+
+      lasers.forEach((l, index) => {
+        l.life -= 0.1;
+        if (l.life <= 0) lasers.splice(index, 1);
+      });
+
+      particles.forEach((p, index) => {
+        p.x += p.vx; p.y += p.vy; p.life -= 0.03;
+        if (p.life <= 0) particles.splice(index, 1);
+      });
+
+      if (lives <= 0) {
+        alert("게임 오버! 최종 점수: " + score);
+        lives = 3; score = 0;
+        obstacles = []; targets = [];
+        gameState = 'IDLE';
+        startOverlay.style.display = 'flex';
+      }
+    }
+
+    function render() {
+      ctx.save();
+      
+      if (shakeTime > 0) {
+        ctx.translate((Math.random() - 0.5) * 15, (Math.random() - 0.5) * 15);
+        shakeTime--;
+      }
+
+      // 1. Render Webcam
+      ctx.save();
+      ctx.scale(-1, 1);
+      ctx.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
+      ctx.restore();
+
+      ctx.fillStyle = 'rgba(5, 10, 25, 0.35)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      const px = player.x * canvas.width;
+      const py = player.y * canvas.height;
+
+      // 2. Calibration / Ready Countdown Overlay on Canvas
+      if (gameState === 'CALIBRATING') {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        ctx.fillStyle = '#00f0ff';
+        ctx.font = '900 64px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(`준비하세요: ${calibrationTimer}`, canvas.width / 2, canvas.height / 2 - 30);
+        
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '24px sans-serif';
+        ctx.fillText('화면 중앙에 자리를 잡고 서주세요!', canvas.width / 2, canvas.height / 2 + 30);
+        ctx.textAlign = 'left';
+        ctx.restore();
+        return;
+      }
+
+      // 3. Hero Costume Arc Reactor
+      ctx.save();
+      ctx.shadowBlur = 25; ctx.shadowColor = '#00f0ff';
+      ctx.strokeStyle = '#00f0ff'; ctx.lineWidth = 4;
+      ctx.beginPath(); ctx.arc(px, py - 40, 22, 0, Math.PI * 2); ctx.stroke();
+      
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath(); ctx.arc(px, py - 40, 12 + Math.sin(frameCount * 0.2) * 3, 0, Math.PI * 2); ctx.fill();
+      
+      ctx.strokeStyle = '#ff0055'; ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.moveTo(px - 70, py - 30); ctx.lineTo(px - 25, py - 55);
+      ctx.moveTo(px + 70, py - 30); ctx.lineTo(px + 25, py - 55);
+      ctx.stroke();
+      ctx.restore();
+
+      // 4. Lasers & Entities
+      lasers.forEach(l => {
+        ctx.save();
+        ctx.strokeStyle = '#00f0ff'; ctx.lineWidth = 12 * l.life;
+        ctx.shadowBlur = 20; ctx.shadowColor = '#00f0ff';
+        ctx.beginPath();
+        ctx.moveTo(l.x1 * canvas.width, l.y1 * canvas.height);
+        ctx.lineTo(l.x2 * canvas.width, l.y2 * canvas.height);
+        ctx.stroke();
+        ctx.restore();
+      });
+
+      obstacles.forEach(obs => {
+        const ox = obs.x * canvas.width;
+        const oy = obs.y * canvas.height;
+        ctx.save();
+        ctx.fillStyle = '#ff0055'; ctx.shadowBlur = 15; ctx.shadowColor = '#ff0055';
+        ctx.beginPath(); ctx.arc(ox, oy, obs.radius, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 3; ctx.stroke();
+        ctx.restore();
+      });
+
+      targets.forEach(t => {
+        const tx = t.x * canvas.width;
+        const ty = t.y * canvas.height;
+        ctx.save();
+        ctx.strokeStyle = '#ffaa00'; ctx.lineWidth = 4; ctx.shadowBlur = 20; ctx.shadowColor = '#ffaa00';
+        ctx.beginPath(); ctx.arc(tx, ty, t.radius + Math.sin(frameCount * 0.1) * 5, 0, Math.PI * 2); ctx.stroke();
+        ctx.restore();
+      });
+
+      particles.forEach(p => {
+        ctx.save();
+        ctx.fillStyle = p.color; ctx.globalAlpha = p.life;
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+      });
+
+      // HUD
+      ctx.fillStyle = '#00f0ff'; ctx.font = '900 28px sans-serif';
+      ctx.fillText(`SCORE: ${score}`, 30, 50);
+
+      let heartStr = '';
+      for (let i = 0; i < lives; i++) heartStr += '❤️ ';
+      ctx.fillText(`HP: ${heartStr}`, 30, 95);
+
+      ctx.restore();
+    }
+
+    function gameLoop() {
+      update();
+      render();
+      requestAnimationFrame(gameLoop);
+    }
+
+    startBtn.addEventListener('click', async () => {
+      const ready = await initCamera();
+      if (ready) {
+        startOverlay.style.display = 'none';
+        gameState = 'CALIBRATING';
+        calibrationTimer = 3;
+        
+        // 3초 카운트다운 캘리브레이션 시작
+        const timerInterval = setInterval(() => {
+          calibrationTimer--;
+          playSound('beep');
+          if (calibrationTimer <= 0) {
+            clearInterval(timerInterval);
+            gameState = 'PLAYING';
+          }
+        }, 1000);
+      }
+    });
+
+    // 루프 상시 실행 (캘리브레이션 화면 및 카메라 렌더링 유지)
+    gameLoop();
+  </script>
+</body>
+</html>
