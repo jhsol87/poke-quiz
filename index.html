@@ -1,206 +1,96 @@
 <!doctype html>
 <html lang="ko">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>포켓몬 탐험 학교</title>
 <style>
-:root{--ink:#243047;--cream:#fff8e9;--green:#6f9d64;--deep:#345b48;--gold:#e6b84f;--line:#d9d0bb;--panel:#fffdf6}
-*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:system-ui,-apple-system,"Apple SD Gothic Neo",sans-serif;color:var(--ink);background:#dce8d4}
-button{font:inherit;cursor:pointer;border:0;border-radius:12px;padding:10px 14px;background:#f5d779;color:#3b3424;font-weight:800;box-shadow:0 3px 0 #c59d3e}
-button:active{transform:translateY(2px);box-shadow:0 1px 0 #c59d3e}
-button.secondary{background:#e8ecdf;box-shadow:0 3px 0 #bdc8b1}button:disabled{opacity:.5}
-.app{max-width:1100px;margin:auto;padding:12px}
-.top{display:flex;align-items:center;gap:10px;justify-content:space-between;flex-wrap:wrap;background:var(--panel);border:3px solid #8b9e76;border-radius:18px;padding:10px 14px;margin-bottom:10px;box-shadow:0 5px 0 #aab99b}
-.brand{font-weight:1000;font-size:20px;color:#355a43}.top small{color:#68765f}
-.layout{display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:12px}
-.gamecard,.sidecard{background:var(--panel);border:3px solid #8b9e76;border-radius:18px;padding:12px;box-shadow:0 5px 0 #aab99b}
-canvas{width:100%;height:auto;display:block;border-radius:12px;border:3px solid #6e8b60;background:#a8cb88;image-rendering:pixelated;touch-action:none}
-.hud{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin:8px 0;font-weight:800}
-.controls{display:grid;grid-template-columns:repeat(3,52px);grid-template-rows:repeat(3,46px);gap:5px;justify-content:center;margin:8px auto}
-.controls button{padding:0;font-size:22px;background:#e6eddf;box-shadow:0 3px 0 #b6c7a9;touch-action:none;user-select:none}
-.controls .empty{visibility:hidden}
-.sidecard h3{margin:2px 0 10px}.sidecard p{font-size:13px;line-height:1.55;color:#56634f}
-.actionlist{display:grid;gap:7px}.actionlist button{width:100%;text-align:left}
-.status{padding:9px 11px;background:#edf3e6;border-radius:12px;font-size:13px;line-height:1.5;margin-top:8px}
-.overlay{position:fixed;inset:0;background:#17251dcc;display:none;align-items:center;justify-content:center;padding:12px;z-index:5;overflow:auto}
-.modal{width:min(760px,100%);background:#fff9e9;border:4px solid #718d62;border-radius:18px;padding:14px;box-shadow:0 10px 0 #314a38}
-.modal h2{margin:4px 0 10px}.battlefield{position:relative;min-height:320px;border:3px solid #718d62;border-radius:14px;overflow:hidden;background:linear-gradient(#cce1d4 0 55%,#a9c78c 55% 70%,#e5e1b6 70%)}
-.battlefield:before{content:"";position:absolute;left:-5%;right:-5%;height:90px;bottom:0;background:radial-gradient(ellipse,#87ad68 0 48%,transparent 50%);opacity:.8}
-.pokeinfo{position:absolute;top:14px;left:14px;width:210px;background:#fffdf1;border:3px solid #647b59;border-radius:12px;padding:8px;z-index:1}
-.hp{height:9px;background:#d7d7c8;border-radius:8px;overflow:hidden;margin-top:5px}.hp span{display:block;height:100%;background:#6dbb63;width:100%;transition:width .35s}
-.wild{position:absolute;right:8%;top:10px;width:190px;height:190px;object-fit:contain;image-rendering:pixelated;filter:brightness(0) saturate(100%);z-index:1}
-.trainer{position:absolute;left:7%;bottom:0;width:160px;height:180px;object-fit:contain;image-rendering:pixelated;z-index:1}
-.battletext{background:#fffdf5;border:3px solid #6e805f;border-radius:12px;padding:12px;margin-top:10px}
-.answers{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.answers button{background:#f3edda;box-shadow:0 3px 0 #c7bda2;text-align:left}
-.captureImg{width:170px;height:170px;object-fit:contain;image-rendering:pixelated;display:block;margin:4px auto}
-.dexgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;max-height:55vh;overflow:auto}
-.dexitem{background:#f1f3e9;border:2px solid #d5ddca;border-radius:12px;padding:8px;text-align:center;font-size:12px}
-.dexitem img{width:72px;height:72px;object-fit:contain;image-rendering:pixelated}.dexitem .unknown{filter:brightness(0) saturate(100%)}
-.fieldrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-input,select{padding:9px;border:2px solid #c8d2bd;border-radius:10px;background:white;font:inherit}
-@media(max-width:760px){.layout{grid-template-columns:1fr}.sidecard{order:-1}.sidecard .actionlist{grid-template-columns:repeat(2,1fr)}.sidecard p{display:none}.wild{width:145px;height:145px;right:3%}.trainer{width:125px;height:145px;left:3%}.pokeinfo{width:180px}.battlefield{min-height:280px}.answers{grid-template-columns:1fr 1fr}.app{padding:7px}}
-</style>
-</head>
-<body>
-<div class="app">
-<header class="top"><div><div class="brand">✦ 포켓몬 탐험 학교</div><small>탐험하고, 배우고, 포켓몬을 모아보자!</small></div><div class="fieldrow"><select id="profile"><option value="0">모험가 1</option><option value="1">모험가 2</option></select><button class="secondary" id="attendance">오늘 출석</button><button class="secondary" id="openDex">도감</button></div></header>
-<div class="layout">
-<main class="gamecard">
-<div class="hud"><span id="areaName">초록마을</span><span id="caughtCount">도감 0 / 로딩 중</span><span id="coords">이동: 방향키 / WASD</span></div>
-<canvas id="field" width="640" height="416" aria-label="탐험 필드"></canvas>
-<div class="controls" aria-label="터치 이동 방향키">
-<div class="empty"></div><button data-dir="up">▲</button><div class="empty"></div>
-<button data-dir="left">◀</button><button class="secondary" id="centerBtn">●</button><button data-dir="right">▶</button>
-<div class="empty"></div><button data-dir="down">▼</button><div class="empty"></div>
-</div>
-<div class="status" id="message">풀숲을 찾아 탐험해 보세요. 초록색 풀숲에서 야생 포켓몬을 만날 수 있어요.</div>
-</main>
-<aside class="sidecard"><h3>모험 기록</h3><div class="actionlist">
-<button id="openDex2">📖 포켓몬 도감</button><button id="openStudy">✏️ 학습 영역</button>
-<button id="openMap">🗺️ 지역 안내</button><button id="saveNow" class="secondary">💾 저장하기</button>
-</div><div class="status" id="profileStats">포획 0마리 · 발견 0마리</div><p>이동: 키보드 방향키/WASD 또는 화면의 방향 버튼을 누르고 있어 보세요. 풀숲에 들어가면 야생 포켓몬을 만날 수 있습니다.</p><p><b>조우 규칙</b><br>일반 포켓몬은 2문제, 희귀·전설·환상 포켓몬은 4문제를 맞히면 포획합니다.</p></aside>
-</div>
-</div>
-<div class="overlay" id="overlay"><div class="modal" id="modal"></div></div>
+:root{--ink:#243047;--paper:#fffaf0;--line:#d5ddc9;--green:#527c54;--gold:#f0cb68}*{box-sizing:border-box}body{margin:0;background:#e8efdf;color:var(--ink);font-family:system-ui,-apple-system,"Apple SD Gothic Neo",sans-serif}.app{max-width:1120px;margin:auto;padding:12px}.top,.panel,.side,.modal{background:var(--paper);border:2px solid #9aaa86;border-radius:18px;box-shadow:0 4px 0 #c4d0b8}.top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:12px;margin-bottom:12px}.brand{font-weight:1000;font-size:21px;color:#345b48}.muted{color:#65715f;font-size:13px}.row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.layout{display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:12px}.panel,.side{padding:12px}.hud{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-weight:800;margin-bottom:8px}canvas{display:block;width:100%;height:auto;border:3px solid #657f59;border-radius:12px;image-rendering:pixelated;touch-action:none}.controls{display:grid;grid-template-columns:repeat(3,54px);grid-template-rows:repeat(3,46px);gap:5px;justify-content:center;margin:10px auto}.controls button{padding:0;font-size:22px;touch-action:none;user-select:none}.controls .blank{visibility:hidden}button,select{font:inherit;border:0;border-radius:11px;padding:10px 13px;background:#f2d77e;color:#3c382b;font-weight:800;cursor:pointer;box-shadow:0 3px 0 #c5a64e}button.secondary{background:#e9eee2;box-shadow:0 3px 0 #c6d0bc}button:disabled{opacity:.45;cursor:not-allowed}.side h3{margin:3px 0 10px}.actions{display:grid;gap:7px}.actions button{text-align:left}.status{background:#edf3e7;padding:10px;border-radius:11px;font-size:13px;line-height:1.5;margin-top:9px}.overlay{position:fixed;inset:0;background:#17251dcc;z-index:10;display:none;align-items:center;justify-content:center;padding:12px;overflow:auto}.modal{width:min(800px,100%);padding:16px;max-height:95vh;overflow:auto}.modal h2{margin:2px 0 12px}.battle{position:relative;min-height:270px;border:3px solid #758d67;border-radius:14px;background:linear-gradient(#cde4db 0 55%,#9fc78d 55% 100%);overflow:hidden}.wild{position:absolute;right:8%;top:5px;width:190px;height:190px;object-fit:contain;image-rendering:pixelated}.trainer{position:absolute;left:8%;bottom:0;width:145px;height:160px;object-fit:contain}.pokeinfo{position:absolute;left:12px;top:12px;background:#fffdf2;border:2px solid #738467;border-radius:10px;padding:9px;min-width:170px}.battletext{background:#fffdf5;border:2px solid #899a7b;border-radius:12px;padding:12px;margin-top:10px}.answers{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.answers button{text-align:left;background:#edf0e5;box-shadow:0 3px 0 #c6cfba}.dexgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(125px,1fr));gap:8px;max-height:58vh;overflow:auto;margin:12px 0}.dexitem{background:#f0f3e9;border:1px solid #d4ddca;border-radius:12px;padding:8px;text-align:center;font-size:12px;min-height:145px}.dexitem img{width:76px;height:76px;object-fit:contain}.dexitem .hidden{opacity:.18;filter:grayscale(1)}.dexitem .detail{font-size:11px;color:#53634d;margin-top:4px}.field{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.field button{text-align:left}.choice{display:flex;gap:8px;align-items:center;padding:10px;border:1px solid #d4ddca;border-radius:12px;margin:6px 0;background:#f5f6ef}.choice img{width:55px;height:55px;object-fit:contain}.choice.selected{border:2px solid #e2b94c;background:#fff7d9}.small{font-size:12px}.progress{height:8px;background:#e2e6d9;border-radius:8px;overflow:hidden}.progress span{display:block;height:100%;background:#72ad67}.toast{font-size:13px}.pill{display:inline-block;background:#e8efdf;padding:3px 8px;border-radius:20px;font-size:12px;margin:2px}@media(max-width:760px){.layout{grid-template-columns:1fr}.side{order:-1}.side p{display:none}.actions{grid-template-columns:repeat(2,1fr)}.wild{width:145px;height:145px}.trainer{width:115px;height:135px}.battle{min-height:235px}.answers{grid-template-columns:1fr}.app{padding:7px}}
+</style></head><body><div class="app">
+<header class="top"><div><div class="brand">✦ 포켓몬 탐험 학교</div><div class="muted">탐험하고, 배우고, 포켓몬을 모아보자!</div></div><div class="row"><select id="profile"><option value="0">하준이</option><option value="1">하늘이</option></select><button class="secondary" id="attendance">오늘 출석</button><button class="secondary" id="openDex">도감</button></div></header>
+<div class="layout"><main class="panel"><div class="hud"><span id="areaName">초록마을</span><span id="caughtCount">도감 0</span><span id="coord">방향키 / WASD</span></div><canvas id="field" width="640" height="416" aria-label="탐험 필드"></canvas><div class="controls"><span class="blank"></span><button data-dir="up">▲</button><span class="blank"></span><button data-dir="left">◀</button><button class="secondary" id="center">●</button><button data-dir="right">▶</button><span class="blank"></span><button data-dir="down">▼</button><span class="blank"></span></div><div class="status" id="message">풀숲을 찾아 탐험해 보세요. 풀숲에서 야생 포켓몬을 만날 수 있어요.</div></main>
+<aside class="side"><h3>모험 기록</h3><div class="actions"><button id="dex2">📖 포켓몬 도감</button><button id="study">✏️ 학습 영역</button><button id="map">🗺️ 지역 안내</button><button id="settings">⚙️ 모험 설정</button><button class="secondary" id="save">💾 저장하기</button></div><div class="status" id="stats"></div><p class="muted">풀숲에서 포켓몬을 만나 문제를 풀어 보세요. 일반 포켓몬은 2문제, 희귀·전설·환상 포켓몬은 4문제를 맞히면 포획할 수 있어요.</p></aside></div></div>
+<div class="overlay" id="overlay"><section class="modal" id="modal"></section></div>
 <script>
-(()=>{
-"use strict";
-const $=id=>document.getElementById(id), canvas=$("field"),ctx=canvas.getContext("2d");
-const API="https://pokeapi.co/api/v2/";
-const STARTERS=[
-152,153,154,155,156,157,158,159,160,252,253,254,255,256,257,258,259,260,
-387,388,389,390,391,392,393,394,395,495,496,497,498,499,500,501,502,503,
-650,651,652,653,654,655,656,657,658,722,723,724,725,726,727,728,729,730,
-810,811,812,813,814,815,816,817,818,906,907,908,909,910,911,912,913,914];
+(()=>{'use strict';
+const $=id=>document.getElementById(id),canvas=$('field'),ctx=canvas.getContext('2d'),API='https://pokeapi.co/api/v2/';
+const STARTERS=[152,153,154,155,156,157,158,159,160,252,253,254,255,256,257,258,259,260,387,388,389,390,391,392,393,394,395,495,496,497,498,499,500,501,502,503,650,651,652,653,654,655,656,657,658,722,723,724,725,726,727,728,729,730,810,811,812,813,814,815,816,817,818,906,907,908,909,910,911,912,913,914];
 const LEGENDARY=[144,145,146,150,243,244,245,249,250,377,378,379,380,381,382,383,384,480,481,482,483,484,486,487,488,638,639,640,641,642,643,644,645,646,647,648,649,716,717,718,772,773,785,786,787,788,789,790,791,792,800,888,889,890,891,892,894,895,896,897,898,905,1001,1002,1003,1004,1007,1008];
 const MYTHICAL=[151,251,385,386,489,490,491,492,493,494,647,648,649,719,720,721,801,802,807,808,809,893,1025];
-const curated=[...new Set([...Array.from({length:151},(_,i)=>i+1),...STARTERS.filter(Number.isInteger),...LEGENDARY.filter(Number.isInteger),...MYTHICAL.filter(Number.isInteger)])].sort((a,b)=>a-b);
-const namesFallback={1:"이상해씨",2:"이상해풀",3:"이상해꽃",4:"파이리",5:"리자드",6:"리자몽",7:"꼬부기",8:"어니부기",9:"거북왕",25:"피카츄",26:"라이츄",150:"뮤츠",151:"뮤"};
-const typeKo={normal:"노말",fire:"불꽃",water:"물",electric:"전기",grass:"풀",ice:"얼음",fighting:"격투",poison:"독",ground:"땅",flying:"비행",psychic:"에스퍼",bug:"벌레",rock:"바위",ghost:"고스트",dragon:"드래곤",dark:"악",steel:"강철",fairy:"페어리"};
-const state={profile:0,player:{x:2,y:2,area:0,dir:"down"},data:{caught:[],seen:[],attendance:[],encounters:0},dex:[],questions:{},active:null,move:null,stepCooldown:0,apiReady:false};
+const DEX=[...new Set([...Array.from({length:151},(_,i)=>i+1),...STARTERS,...LEGENDARY,...MYTHICAL])].sort((a,b)=>a-b);
+const typeKo={normal:'노말',fire:'불꽃',water:'물',electric:'전기',grass:'풀',ice:'얼음',fighting:'격투',poison:'독',ground:'땅',flying:'비행',psychic:'에스퍼',bug:'벌레',rock:'바위',ghost:'고스트',dragon:'드래곤',dark:'악',steel:'강철',fairy:'페어리'};
 const areas=[
-{name:"초록마을",theme:"#9fca87",rare:[25,37,133]}, {name:"숲길",theme:"#76a96f",rare:[43,46,69]}, {name:"물가",theme:"#83c5d4",rare:[54,60,72]}, 
-{name:"바위산",theme:"#b9a88b",rare:[74,95]}, {name:"꽃들판",theme:"#b8ce83",rare:[35,39]}, {name:"어두운 동굴",theme:"#777b86",rare:[41,66,92]},
-{name:"바닷가",theme:"#83c5d4",rare:[98,120,129]}, {name:"고대 유적",theme:"#bca77d",rare:[63,100,201]}, {name:"전설의 숲",theme:"#8bb58c",rare:[150,151,249,250,385,386,493]}
+{name:'초록마을',theme:'grass',rare:[25,133,37],common:[16,19,43,69,10]},
+{name:'바람숲',theme:'forest',rare:[46,47,123],common:[1,2,10,11,43,44,46,69,102]},
+{name:'푸른 해변',theme:'beach',rare:[54,72,90],common:[7,8,54,60,79,98,118,129]},
+{name:'모래 사막',theme:'desert',rare:[27,28],common:[27,28,37,74,104,111]},
+{name:'눈꽃 설원',theme:'snow',rare:[124,215,220],common:[86,87,220,225,238,361,363]},
+{name:'불꽃 화산',theme:'volcano',rare:[6,146,5],common:[4,5,6,37,58,77,126]},
+{name:'꽃의 초원',theme:'flower',rare:[35,39,175],common:[35,39,43,44,69,102,175]},
+{name:'신비한 늪지',theme:'swamp',rare:[92,93,94],common:[23,24,41,42,60,61,72,88,89]},
+{name:'수정 동굴',theme:'cave',rare:[95,131,302],common:[41,42,66,67,74,75,95,208,302]}
 ];
-const tiles=[
-["####################","#....g.............#","#..g...........g...#","#......g...........#","#.............g....#","#..g................","#..................#","#.....g............#","#..............g...#","#..................#","####################"],
-["####################","#..g.....T.........#","#..g...........g...#","#......g...........#","#.............g....#","#....g.............#","#..................#","#.....g............#","#..............g...#","####################"],
-["####################","#....g.............#","#~~~~~.............#","#~~~~~...g.........#","#~~~~~.............#","#....g.............#","#..................#","#..............g...#","####################"]
-];
-const maps=Array.from({length:9},(_,i)=>tiles[i]||tiles[i%3]);
-function storageKey(){return "pokeSchool_v2_profile_"+state.profile}
-function loadProfile(){try{const v=JSON.parse(localStorage.getItem(storageKey())||"{}");state.data={caught:v.caught||[],seen:v.seen||[],attendance:v.attendance||[],encounters:v.encounters||0};state.player=v.player||{x:2,y:2,area:0,dir:"down"}}catch(e){}}
-function save(){localStorage.setItem(storageKey(),JSON.stringify({...state.data,player:state.player}));$("message").textContent="모험 기록을 저장했어요."}
-function img(id,official=true){return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`}
-async function getPokemon(id){
- if(state.dex[id])return state.dex[id];
- try{
-  const [p,s]=await Promise.all([fetch(API+"pokemon/"+id),fetch(API+"pokemon-species/"+id)]);
-  if(!p.ok||!s.ok)throw Error("API");
-  const pd=await p.json(),sd=await s.json();
-  const ko=sd.names?.find(n=>n.language.name==="ko")?.name||namesFallback[id]||pd.name;
-  const entry={id,name:ko,types:pd.types.sort((a,b)=>a.slot-b.slot).map(x=>typeKo[x.type.name]||x.type.name),height:pd.height/10,weight:pd.weight/10,genus:sd.genera?.find(x=>x.language.name==="ko")?.genus||"포켓몬",rarity:MYTHICAL.includes(id)?"환상":LEGENDARY.includes(id)?"전설":STARTERS.includes(id)?"스타팅":"일반",sprite:pd.sprites.front_default||img(id)};
-  state.dex[id]=entry;return entry;
- }catch(e){return {id,name:namesFallback[id]||`포켓몬 #${id}`,types:[],height:null,weight:null,genus:"정보 불러오기 필요",rarity:MYTHICAL.includes(id)?"환상":LEGENDARY.includes(id)?"전설":STARTERS.includes(id)?"스타팅":"일반",sprite:img(id),unverified:true}}
+// Keep encounter tables numeric and curated.
+areas[2].common=[7,8,54,60,79,98,118,129,];areas[3].common=[27,28,37,74,104,111,];areas[4].common=[86,87,220,225,238,361,363];areas[5].common=[4,5,6,37,58,77,126];areas[6].common=[35,39,43,44,69,102,175];areas[8].common=[41,42,66,67,74,75,95,208,302];
+function makeMap(i){let m=Array.from({length:13},(_,y)=>Array.from({length:20},(_,x)=>(x===0||x===19||y===0||y===12)?'#':'.')); // west/east gates at y=6
+m[6][0]='.';m[6][19]='.';
+// central winding trail, open entry and exit
+for(let x=1;x<19;x++)m[6][x]='.';
+const rand=(x,y)=>((x*17+y*31+i*13)%11);
+for(let y=1;y<12;y++)for(let x=1;x<19;x++){if(y===6||x===1||x===18)continue;let r=rand(x,y);if(r<2)m[y][x]='g';else if(r===4&&i!==0)m[y][x]='o';}
+// region-specific obstacles, never seal the central path
+for(let y=2;y<11;y++)for(let x=3;x<17;x++){if(y===6)continue;let v=(x*7+y*5+i*3)%29;if(v===0||v===1)m[y][x]='#';}
+return m.map(r=>r.join(''));}
+const maps=areas.map((_,i)=>makeMap(i));
+const state={profile:0,player:{x:2,y:6,area:0,dir:'down'},data:null,active:null,dexCache:{},questionBanks:null,held:{},lastMove:0,companion:null};
+function blankData(){return {caught:[],seen:[],attendance:[],encounters:0,player:{x:2,y:6,area:0,dir:'down'},character:'red',companion:25,questionHistory:{},questionCounts:{},settings:{encounterRate:.16},visited:[0]};}
+function key(){return 'pokeSchool_v3_profile_'+state.profile}
+function load(){try{let d=JSON.parse(localStorage.getItem(key())||'null')||{};state.data={...blankData(),...d};state.data.player={...blankData().player,...(d.player||{})};state.data.questionHistory=d.questionHistory||{};state.data.questionCounts=d.questionCounts||{};state.player=state.data.player;}catch(e){state.data=blankData();state.player=state.data.player;} $('profile').value=String(state.profile);}
+function save(silent=false){state.data.player=state.player;try{localStorage.setItem(key(),JSON.stringify(state.data));if(!silent)$('message').textContent='모험 기록을 저장했어요.';}catch(e){$('message').textContent='저장 공간이 부족해요. 브라우저 저장 공간을 확인해 주세요.';}}
+function sprite(id){return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`;}
+const fallback={1:'이상해씨',2:'이상해풀',3:'이상해꽃',4:'파이리',5:'리자드',6:'리자몽',7:'꼬부기',8:'어니부기',9:'거북왕',25:'피카츄',26:'라이츄',150:'뮤츠',151:'뮤'};
+async function pokemon(id){if(state.dexCache[id])return state.dexCache[id];let cached;try{cached=JSON.parse(localStorage.getItem('poke_meta_'+id)||'null');}catch(e){}if(cached&&!cached.unverified){state.dexCache[id]=cached;return cached;}try{const [pr,sr]=await Promise.all([fetch(API+'pokemon/'+id),fetch(API+'pokemon-species/'+id)]);if(!pr.ok||!sr.ok)throw Error('api');const p=await pr.json(),s=await sr.json();const entry={id,name:s.names?.find(n=>n.language.name==='ko')?.name||fallback[id]||p.name,types:p.types.sort((a,b)=>a.slot-b.slot).map(t=>typeKo[t.type.name]||t.type.name),height:p.height/10,weight:p.weight/10,genus:s.genera?.find(g=>g.language.name==='ko')?.genus||'포켓몬',rarity:MYTHICAL.includes(id)?'환상':LEGENDARY.includes(id)?'전설':areas.some(a=>a.rare.includes(id))?'희귀':'일반',sprite:p.sprites.front_default||sprite(id)};state.dexCache[id]=entry;try{localStorage.setItem('poke_meta_'+id,JSON.stringify(entry));}catch(e){}return entry;}catch(e){const entry={id,name:fallback[id]||`포켓몬 #${id}`,types:[],height:null,weight:null,genus:'정보 확인 필요',rarity:MYTHICAL.includes(id)?'환상':LEGENDARY.includes(id)?'전설':'일반',sprite:sprite(id),unverified:true};state.dexCache[id]=entry;return entry;}}
+function draw(){let t=32;ctx.clearRect(0,0,640,416);const a=areas[state.player.area],m=maps[state.player.area];const palettes={grass:['#a6ce8c','#82b66d'],forest:['#527b53','#315b43'],beach:['#f0d58d','#e8c36d'],desert:['#d9b879','#c69a5e'],snow:['#e7f1f3','#c7dce5'],volcano:['#8b6253','#5d4541'],flower:['#c2d88d','#a6c879'],swamp:['#7f9d78','#5b806c'],cave:['#777d8a','#555c6c']};let [base,alt]=palettes[a.theme];ctx.fillStyle=base;ctx.fillRect(0,0,640,416);
+for(let y=0;y<13;y++)for(let x=0;x<20;x++){let c=m[y][x],px=x*t,py=y*t;ctx.fillStyle=(x+y)%2?base:alt;ctx.fillRect(px,py,t,t);if(c==='#'){ctx.fillStyle=a.theme==='snow'?'#aabac2':a.theme==='desert'?'#9a815f':a.theme==='volcano'?'#443d40':a.theme==='cave'?'#353d4b':'#345b43';ctx.fillRect(px,py,t,t);ctx.fillStyle='#ffffff22';ctx.fillRect(px+4,py+4,24,5);}else if(c==='g'){ctx.fillStyle=a.theme==='flower'?'#6caa55':a.theme==='swamp'?'#477e59': '#4b994d';ctx.fillRect(px,py,t,t);ctx.strokeStyle=a.theme==='flower'?'#f6d9e7':'#c6e58a';ctx.lineWidth=2;for(let k=0;k<3;k++){ctx.beginPath();ctx.moveTo(px+7+k*8,py+26);ctx.lineTo(px+5+k*8,py+12);ctx.stroke();}}else if(c==='o'){ctx.fillStyle=a.theme==='snow'?'#fff':a.theme==='desert'?'#a68b69':'#6f7e70';ctx.beginPath();ctx.arc(px+16,py+16,11,0,Math.PI*2);ctx.fill();}}
+// Exit markers are always at west/east center.
+ctx.fillStyle='#f6d36e';ctx.fillRect(0,6*t+4,8,24);ctx.fillRect(19*t+24,6*t+4,8,24);
+// Character sprite-like avatar.
+const p=state.player,px=p.x*t,py=p.y*t;drawAvatar(ctx,px,py,p.dir,state.data.character);
+// companion follows with a small trailing offset
+if(state.data.companion){const off={up:[0,1],down:[0,-1],left:[1,0],right:[-1,0]}[p.dir]||[0,1],cx=(p.x+off[0])*t,cy=(p.y+off[1])*t;ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(cx+16,cy+18,10,0,Math.PI*2);ctx.fill();const im=companionImages[state.data.companion];if(im?.complete)ctx.drawImage(im,cx+1,cy+1,30,30);else{ctx.fillStyle='#e9b93f';ctx.fillRect(cx+8,cy+9,16,16);}}
+$('areaName').textContent=a.name;$('caughtCount').textContent=`도감 ${state.data.caught.length} / ${DEX.length}`;$('stats').textContent=`포획 ${state.data.caught.length}마리 · 발견 ${state.data.seen.length}마리 · 조우 ${state.data.encounters}회`;
 }
-function rand(arr){return arr[Math.floor(Math.random()*arr.length)]}
-function draw(){
- const w=canvas.width,h=canvas.height,t=32;ctx.clearRect(0,0,w,h);
- const area=areas[state.player.area];ctx.fillStyle=area.theme;ctx.fillRect(0,0,w,h);
- const map=maps[state.player.area];
- for(let y=0;y<13;y++)for(let x=0;x<20;x++){
-  const c=map[y%map.length][x%map[y%map.length].length]||".",px=x*t,py=y*t;
-  if(c==="#"){ctx.fillStyle="#557a50";ctx.fillRect(px,py,t,t);ctx.fillStyle="#73975b";ctx.fillRect(px+3,py+3,t-6,t-6)}
-  else if(c==="g"){ctx.fillStyle="#4d944c";ctx.fillRect(px,py,t,t);ctx.strokeStyle="#b2d875";ctx.lineWidth=2;for(let k=0;k<3;k++){ctx.beginPath();ctx.moveTo(px+7+k*8,py+25);ctx.lineTo(px+5+k*8,py+13);ctx.stroke()}}
-  else if(c==="~"){ctx.fillStyle="#66b6cf";ctx.fillRect(px,py,t,t);ctx.strokeStyle="#b6e5e8";ctx.beginPath();ctx.moveTo(px+3,py+16);ctx.lineTo(px+27,py+16);ctx.stroke()}
-  else {ctx.fillStyle=(x+y)%2?"#a7ce8c":"#a1c782";ctx.fillRect(px,py,t,t)}
- }
- // trainer pixel-art
- const px=state.player.x*t,py=state.player.y*t;
- ctx.fillStyle="#243d52";ctx.fillRect(px+9,py+17,14,13);ctx.fillStyle="#f0bd91";ctx.fillRect(px+10,py+7,12,12);
- ctx.fillStyle="#c74739";ctx.fillRect(px+8,py+4,16,5);ctx.fillRect(px+6,py+8,5,3);
- ctx.fillStyle="#f1e9d2";ctx.fillRect(px+8,py+30,6,4);ctx.fillRect(px+18,py+30,6,4);
- $("areaName").textContent=area.name;$("caughtCount").textContent=`도감 ${state.data.caught.length} / ${curated.length}`;
- $("profileStats").textContent=`포획 ${state.data.caught.length}마리 · 발견 ${state.data.seen.length}마리 · 조우 ${state.data.encounters}회`;
-}
-function blocked(x,y){const map=maps[state.player.area],row=map[y%map.length];return !row||row[x%row.length]==="#"||row[x%row.length]==="~"}
-function move(dir){if(state.active)return;let {x,y}=state.player;const d={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]}[dir];if(!d)return;let nx=x+d[0],ny=y+d[1];if(nx<1||nx>18){state.player.area=(state.player.area+(nx>18?1:8))%9;nx=nx<1?18:1}if(ny<1||ny>11)ny=ny<1?11:1;if(!blocked(nx,ny)){state.player.x=nx;state.player.y=ny;state.player.dir=dir;draw();const tile=maps[state.player.area][ny%maps[state.player.area].length]?.[nx%maps[state.player.area][ny%maps[state.player.area].length].length];if(tile==="g"&&Math.random()<.18)encounter()}}
-let keys={};window.addEventListener("keydown",e=>{const k=e.key.toLowerCase(),d={arrowup:"up",w:"up",arrowdown:"down",s:"down",arrowleft:"left",a:"left",arrowright:"right",d:"right"}[k];if(d){e.preventDefault();if(!keys[k])move(d);keys[k]=true}});
-window.addEventListener("keyup",e=>{delete keys[e.key.toLowerCase()]});
-let repeat=null;document.querySelectorAll("[data-dir]").forEach(b=>{const start=e=>{e.preventDefault();const d=b.dataset.dir;move(d);clearInterval(repeat);repeat=setInterval(()=>move(d),175)};const stop=()=>clearInterval(repeat);b.addEventListener("pointerdown",start);["pointerup","pointerleave","pointercancel"].forEach(ev=>b.addEventListener(ev,stop))});
-const english=[["apple","사과"],["book","책"],["cat","고양이"],["dog","개"],["egg","달걀"],["fish","물고기"],["grape","포도"],["house","집"],["ice","얼음"],["juice","주스"],["kite","연"],["lion","사자"],["moon","달"],["nose","코"],["orange","오렌지"],["pen","펜"],["queen","여왕"],["rabbit","토끼"],["sun","태양"],["tree","나무"],["umbrella","우산"],["van","밴"],["water","물"],["yellow","노란색"],["zoo","동물원"]];
-const korean=[["‘바다’와 뜻이 반대인 말은?","산","강","하늘","들판",0],["‘크다’의 반대말은?","높다","작다","길다","넓다",1],["‘빠르다’의 반대말은?","느리다","높다","밝다","깊다",0]];
-function makeQuestions(type){
- let a=[];
- if(type==="영어"){
-  const words=[...english];
-  for(let i=0;i<100;i++){
-   const [en,ko]=words[i%words.length];
-   const wrong=words.filter(x=>x[1]!==ko).sort(()=>Math.random()-.5).slice(0,3).map(x=>x[1]);
-   const opts=[ko,...wrong].sort(()=>Math.random()-.5);
-   a.push({q:`'${en}'의 뜻은?`,opts,answer:opts.indexOf(ko)});
-  }
- }else if(type==="덧셈"||type==="뺄셈"){
-  for(let i=0;i<100;i++){
-   let x=1+Math.floor(Math.random()*50),y=1+Math.floor(Math.random()*50);
-   if(type==="뺄셈"&&y>x)[x,y]=[y,x];
-   const ans=type==="덧셈"?x+y:x-y;
-   const candidates=[ans,ans+1,Math.max(0,ans-1),ans+2];
-   const opts=[...new Set(candidates)];
-   while(opts.length<4)opts.push(ans+opts.length+2);
-   opts.sort(()=>Math.random()-.5);
-   a.push({q:`${x} ${type==="덧셈"?"+":"−"} ${y} = ?`,opts:opts.map(String),answer:opts.indexOf(ans)});
-  }
- }else{
-  const templates=[
-   ["‘바다’와 뜻이 반대인 말은?",["산","강","하늘","들판"],0],
-   ["‘크다’의 반대말은?",["높다","작다","길다","넓다"],1],
-   ["‘빠르다’의 반대말은?",["느리다","높다","밝다","깊다"],0],
-   ["‘기쁘다’와 비슷한 뜻은?",["슬프다","즐겁다","무섭다","피곤하다"],1],
-   ["‘아침’의 반대 시간은?",["점심","저녁","낮","오전"],1],
-   ["‘뜨겁다’의 반대말은?",["차갑다","따뜻하다","덥다","맵다"],0],
-   ["‘무겁다’의 반대말은?",["크다","가볍다","높다","길다"],1],
-   ["‘밝다’의 반대말은?",["환하다","어둡다","맑다","깨끗하다"],1]
-  ];
-  for(let i=0;i<100;i++){const [q,opts,answer]=templates[i%templates.length];a.push({q,opts:[...opts],answer})}
- }
- return a;
-}
-function showOverlay(content){$("modal").innerHTML=content;$("overlay").style.display="flex"}
-function closeOverlay(){$("overlay").style.display="none";state.active=null;draw()}
-$("overlay").addEventListener("click",e=>{if(e.target===$("overlay"))closeOverlay()});
-async function encounter(){
- if(state.active)return;let pool=curated.filter(id=>id<=151);const area=areas[state.player.area];if(Math.random()<.22)pool=pool.concat(area.rare.filter(Number.isInteger));if(state.player.area===8&&Math.random()<.08)pool=pool.concat(LEGENDARY.filter(Number.isInteger),MYTHICAL.filter(Number.isInteger));
- const id=rand(pool);const p=await getPokemon(id);state.data.encounters++;if(!state.data.seen.includes(id))state.data.seen.push(id);
- const count=["전설","환상"].includes(p.rarity)?4:MYTHICAL.includes(id)||LEGENDARY.includes(id)?4:2;
- state.active={pokemon:p,total:count,index:0,area:state.player.area};const q=makeQuestions(rand(["영어","한글","덧셈","뺄셈"]))[Math.floor(Math.random()*20)];
- state.active.questions=Array.from({length:count},(_,i)=>makeQuestions(i%4===0?"영어":i%4===1?"한글":i%4===2?"덧셈":"뺄셈")[Math.floor(Math.random()*80)]);
- renderBattle();
-}
-function renderBattle(){
- const a=state.active,p=a.pokemon,q=a.questions[a.index];const pct=(a.index/a.total)*100;
- showOverlay(`<h2>야생 ${p.name}이(가) 나타났다!</h2><div class="battlefield"><div class="pokeinfo"><b>${p.name}</b> <small>Lv. ${Math.max(3,Math.floor(p.id/30)+3)}</small><div class="hp"><span style="width:${100-pct}%"></span></div></div><img class="wild" src="${img(p.id)}" alt="포켓몬 실루엣"><img class="trainer" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/25.png" alt="트레이너"></div><div class="battletext"><b>${q.q}</b><div class="answers">${q.opts.map((o,i)=>`<button data-answer="${i}">${["①","②","③","④"][i]} ${o}</button>`).join("")}</div><small>문제 ${a.index+1} / ${a.total} · 정답을 맞히면 공격해요!</small></div>`);
- $("modal").querySelectorAll("[data-answer]").forEach(b=>b.addEventListener("click",()=>answer(Number(b.dataset.answer))));
-}
-function answer(n){const a=state.active,q=a.questions[a.index];if(n===q.answer){a.index++;if(a.index>=a.total)capture();else renderBattle()}else{$("modal").querySelector(".battletext").insertAdjacentHTML("beforeend",`<div class="status">아쉽지만 다시 도전해 보자! 정답을 다시 골라봐.</div>`)}}
-async function capture(){
- const p=state.active.pokemon,first=!state.data.caught.includes(p.id);if(first)state.data.caught.push(p.id);save();
- showOverlay(`<h2>포획 성공!</h2><p style="text-align:center">몬스터볼이 흔들립니다…</p><div style="text-align:center;font-size:54px;animation:shake .55s infinite">⚪</div><img class="captureImg" src="${img(p.id)}" alt="${p.name}"><h2 style="text-align:center">${p.name}</h2><p style="text-align:center">${first?"처음 만난 포켓몬이 도감에 등록되었어!":"이미 도감에 있는 포켓몬을 다시 만났어!"}</p><div class="fieldrow" style="justify-content:center"><button id="seeDex">도감 보기</button><button id="continue">계속 탐험</button></div>`);
- $("seeDex").onclick=()=>{closeOverlay();openDex()};$("continue").onclick=closeOverlay;
-}
-async function openDex(){const ids=curated;showOverlay(`<h2>포켓몬 도감 <small>${state.data.caught.length} / ${ids.length}</small></h2><div class="dexgrid" id="dexgrid"></div><button id="dexClose">닫기</button>`);const grid=$("dexgrid");for(const id of ids){const caught=state.data.caught.includes(id),seen=state.data.seen.includes(id);const p=await getPokemon(id);const div=document.createElement("div");div.className="dexitem";div.innerHTML=`<img class="${caught?"":"unknown"}" src="${img(id)}"><b>#${String(id).padStart(3,"0")} ${caught||seen?p.name:"???"}</b><div>${caught?p.types.join(" · "):seen?"발견":"미발견"}</div>${caught?`<small>${p.height??"—"}m · ${p.weight??"—"}kg</small>`:""}`;grid.appendChild(div)}$("dexClose").onclick=closeOverlay}
-function openStudy(){showOverlay(`<h2>학습 영역</h2><p>문제는 포켓몬 조우 중 무작위로 출제돼요.</p><div class="actionlist">${["영어","한글","덧셈","뺄셈"].map(x=>`<button data-study="${x}">${x} 문제 예시 보기</button>`).join("")}</div><button id="studyClose">닫기</button>`);$("modal").querySelectorAll("[data-study]").forEach(b=>b.onclick=()=>{const q=rand(makeQuestions(b.dataset.study));alert(q.q+"\\n"+q.opts.join(" / "))});$("studyClose").onclick=closeOverlay}
-function openMap(){showOverlay(`<h2>지역 안내</h2><div class="actionlist">${areas.map((a,i)=>`<button data-area="${i}">${i+1}. ${a.name}</button>`).join("")}</div><button id="mapClose">닫기</button>`);$("modal").querySelectorAll("[data-area]").forEach(b=>b.onclick=()=>{state.player.area=Number(b.dataset.area);state.player.x=2;state.player.y=2;closeOverlay()});$("mapClose").onclick=closeOverlay}
-$("openDex").onclick=$("openDex2").onclick=openDex;$("openStudy").onclick=openStudy;$("openMap").onclick=openMap;$("saveNow").onclick=save;
-$("profile").onchange=e=>{save();state.profile=Number(e.target.value);loadProfile();draw()};
-$("attendance").onclick=()=>{const d=new Date().toLocaleDateString("sv-SE");if(!state.data.attendance.includes(d)){state.data.attendance.push(d);save();$("message").textContent="오늘 출석 완료!";}else $("message").textContent="오늘은 이미 출석했어요."};
-$("centerBtn").onclick=()=>{$("message").textContent="방향 버튼을 길게 누르면 계속 이동해요."};
-loadProfile();draw();
-// Metadata warm-up for first 151; visible gameplay remains available if the API is offline.
-getPokemon(4).then(()=>{state.apiReady=true});
+function drawAvatar(c,x,y,dir,kind){const colors={red:['#c94d42','#243e59'],blue:['#477ac1','#253a58'],green:['#4f9365','#344d43'],yellow:['#e0b83e','#334b5d']},v=colors[kind]||colors.red;c.fillStyle=v[1];c.fillRect(x+8,y+18,16,13);c.fillStyle='#f2c29b';c.fillRect(x+10,y+7,12,12);c.fillStyle=v[0];c.fillRect(x+7,y+4,18,6);c.fillRect(x+6,y+9,5,3);c.fillStyle='#f5eee0';c.fillRect(x+8,y+30,7,3);c.fillRect(x+18,y+30,7,3);}
+const companionImages={};function loadCompanion(id){if(!id)return;let im=companionImages[id];if(!im){im=new Image();im.src=sprite(id);companionImages[id]=im;im.onload=draw;}}
+function blocked(x,y){if(y<1||y>11||x<0||x>19)return true;return maps[state.player.area][y][x]==='#';}
+function move(dir){if(state.active)return;const d={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]}[dir];if(!d)return;let nx=state.player.x+d[0],ny=state.player.y+d[1];if(nx<0||nx>19){if(ny!==6){$('message').textContent='지역 출입구는 가운데 길에 있어요.';return;}const old=state.player.area;state.player.area=(old+(nx>19?1:8))%9;nx=nx<0?18:1;state.data.visited=Array.from(new Set([...state.data.visited,state.player.area]));$('message').textContent=`${areas[state.player.area].name}에 도착했어요!`;}
+if(blocked(nx,ny))return;state.player.x=nx;state.player.y=ny;state.player.dir=dir;draw();const tile=maps[state.player.area][ny][nx];if(tile==='g'&&Math.random()<(state.data.settings.encounterRate||.16))encounter();save(true);}
+let keyDown={};window.addEventListener('keydown',e=>{let k=e.key.toLowerCase(),d={arrowup:'up',w:'up',arrowdown:'down',s:'down',arrowleft:'left',a:'left',arrowright:'right',d:'right'}[k];if(d){e.preventDefault();if(!keyDown[k])move(d);keyDown[k]=true;}});window.addEventListener('keyup',e=>delete keyDown[e.key.toLowerCase()]);window.addEventListener('blur',()=>keyDown={});
+let repeatTimer=null;document.querySelectorAll('[data-dir]').forEach(b=>{const start=e=>{e.preventDefault();let d=b.dataset.dir;move(d);clearInterval(repeatTimer);repeatTimer=setInterval(()=>move(d),180);};const stop=()=>clearInterval(repeatTimer);b.addEventListener('pointerdown',start);['pointerup','pointerleave','pointercancel'].forEach(ev=>b.addEventListener(ev,stop));});
+// Question banks: four pools each contain at least 80 distinct, deterministic questions.
+const englishWords=[['apple','사과'],['book','책'],['cat','고양이'],['dog','개'],['egg','달걀'],['fish','물고기'],['grape','포도'],['house','집'],['ice','얼음'],['juice','주스'],['kite','연'],['lion','사자'],['moon','달'],['nose','코'],['orange','오렌지'],['pen','펜'],['queen','여왕'],['rabbit','토끼'],['sun','태양'],['tree','나무'],['umbrella','우산'],['van','승합차'],['water','물'],['yellow','노란색'],['zoo','동물원'],['ant','개미'],['bird','새'],['car','자동차'],['door','문'],['ear','귀'],['flower','꽃'],['green','초록색'],['hand','손'],['insect','곤충'],['jump','뛰다'],['king','왕'],['leg','다리'],['milk','우유'],['nest','둥지'],['owl','부엉이'],['pink','분홍색'],['quiet','조용한'],['rain','비'],['star','별'],[' tiger','호랑이'],['up','위'],['violet','보라색'],['window','창문'],['box','상자'],['yes','네'],['zero','영'],['bear','곰'],['cake','케이크'],['duck','오리'],['elephant','코끼리'],['frog','개구리'],['girl','여자아이'],['hat','모자'],['island','섬'],['key','열쇠'],['leaf','나뭇잎'],['map','지도'],['night','밤'],['open','열다'],['pig','돼지'],['queen','여왕'],['run','달리다'],['ship','배'],['train','기차'],['under','아래'],['warm','따뜻한'],['fox','여우'],['yoyo','요요'],['zebra','얼룩말'],['bread','빵'],['cloud','구름'],['dream','꿈'],['family','가족'],['happy','행복한'],['little','작은'],['school','학교'],['boat','배'],['purple','보라색'],['three','셋'],['sleep','자다'],['smile','웃다'],['table','탁자'],['five','다섯'],['walk','걷다'],['watermelon','수박']].map(x=>[x[0].trim(),x[1]]);
+const koreanPairs=[['크다','작다'],['빠르다','느리다'],['뜨겁다','차갑다'],['무겁다','가볍다'],['밝다','어둡다'],['길다','짧다'],['높다','낮다'],['많다','적다'],['넓다','좁다'],['깊다','얕다'],['기쁘다','슬프다'],['웃다','울다'],['열다','닫다'],['올라가다','내려가다'],['앞','뒤'],['안','밖'],['위','아래'],['낮','밤'],['아침','저녁'],['시작','끝'],['새롭다','낡다'],['깨끗하다','더럽다'],['달다','쓰다'],['단단하다','말랑하다'],['젖다','마르다'],['무섭다','안전하다'],['쉽다','어렵다'],['이기다','지다'],['살다','죽다'],['주다','받다'],['오다','가다'],['앉다','서다'],['켜다','끄다'],['잠들다','깨다'],['비싸다','싸다'],['친절하다','불친절하다'],['조용하다','시끄럽다'],['배부르다','배고프다'],['따뜻하다','차갑다'],['강하다','약하다']];
+const koreanQuestions=[];koreanPairs.forEach(([a,b],i)=>{koreanQuestions.push({q:`'${a}'의 반대말은 무엇일까요?`,answer:b,opts:[b,koreanPairs[(i+3)%koreanPairs.length][0],koreanPairs[(i+8)%koreanPairs.length][0],koreanPairs[(i+13)%koreanPairs.length][0]]});});
+const meanings=[['물이 얼면 무엇이 될까요?','얼음',['김','불','모래']],['해가 지고 어두워지는 때는?','밤',['아침','점심','낮']],['비가 내릴 때 쓰는 물건은?','우산',['모자','장갑','수건']],['책을 읽는 장소는?','도서관',['수영장','놀이터','주방']],['씨앗에서 자라나는 것은?','식물',['돌','구름','자동차']],['병아리가 자라면 무엇이 될까요?','닭',['오리','참새','펭귄']],['하늘에서 반짝이는 것은?','별',['조개','나뭇잎','연필']],['발에 신는 것은?','신발',['장갑','모자','안경']],['이를 닦을 때 쓰는 것은?','칫솔',['빗','숟가락','연필']],['시간을 알려주는 물건은?','시계',['그릇','가방','베개']],['편지를 넣어 보내는 곳은?','우체통',['냉장고','세탁기','책상']],['물을 담아 마시는 것은?','컵',['접시','빗자루','베개']],['나무에 열리는 열매는?','사과',['당근','감자','양파']],['겨울에 하늘에서 내리는 하얀 것은?','눈',['모래','꽃가루','연기']],['물고기가 사는 곳은?','물속',['나무 위','사막','하늘']],['손을 씻을 때 사용하는 것은?','비누',['연필','풀','종이']],['음식을 차갑게 보관하는 것은?','냉장고',['오븐','선풍기','텔레비전']],['길을 건널 때 확인하는 신호는?','신호등',['온도계','나침반','초인종']],['그림을 그릴 때 쓰는 것은?','크레파스',['빗자루','젓가락','망치']],['비행기가 날아가는 곳은?','하늘',['땅속','바닷속','동굴']]];
+meanings.forEach(([q,a,w])=>koreanQuestions.push({q,answer:a,opts:[a,...w]}));
+const banks={영어:englishWords.map(([en,ko])=>({q:`'${en}'의 뜻은 무엇일까요?`,answer:ko,opts:[ko]})),한글:koreanQuestions,덧셈:[],뺄셈:[]};
+function shuffle(a){let b=[...a];for(let i=b.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;}
+for(let x=0;x<=30;x++)for(let y=0;y<=30;y++){banks.덧셈.push({q:`${x} + ${y} = ?`,answer:String(x+y),opts:[String(x+y)]});if(x>=y)banks.뺄셈.push({q:`${x} − ${y} = ?`,answer:String(x-y),opts:[String(x-y)]});}
+function finalizeBank(type){let arr=banks[type];if(type==='영어'||type==='한글'){let unique=new Map(arr.map(q=>[q.q,q]));arr=[...unique.values()];}return arr.map((q,i)=>{let wrong;if(type==='영어')wrong=shuffle(englishWords.filter(x=>x[1]!==q.answer).map(x=>x[1])).slice(0,3);else if(type==='한글')wrong=shuffle(koreanQuestions.flatMap(x=>x.opts).filter(x=>x!==q.answer)).slice(0,3);else{let n=Number(q.answer);wrong=shuffle([...new Set([n+1,n-1,n+2,n-2,Math.max(0,n+3)].filter(v=>v>=0&&v!==n).map(String))]).slice(0,3);}let opts=shuffle([q.answer,...wrong]);return {...q,opts,answer:opts.indexOf(q.answer),id:type+'_'+i};});}
+const questionBanks={};Object.keys(banks).forEach(t=>questionBanks[t]=finalizeBank(t));
+// Pad Korean to 80 using clear, uniquely worded meaning/antonym questions from the curated pairs.
+while(questionBanks.한글.length<80){let i=questionBanks.한글.length,p=koreanPairs[i%koreanPairs.length];let q={q:`'${p[0]}'와 반대되는 뜻을 가진 낱말은?`,answer:p[1],opts:shuffle([p[1],koreanPairs[(i+5)%40][0],koreanPairs[(i+11)%40][0],koreanPairs[(i+17)%40][0]]),id:'한글_extra_'+i};q.answer=q.opts.indexOf(p[1]);questionBanks.한글.push(q);}
+function pickQuestion(type){let arr=questionBanks[type],hist=state.data.questionHistory[type]||[],counts=state.data.questionCounts[type]||{};let candidates=arr.filter(q=>!hist.includes(q.id));if(candidates.length<5)candidates=arr; candidates.sort((a,b)=>(counts[a.id]||0)-(counts[b.id]||0));let q=candidates.slice(0,Math.max(1,Math.min(12,candidates.length)));q=rand(q);hist.push(q.id);if(hist.length>Math.max(12,Math.floor(arr.length*.25)))hist.shift();state.data.questionHistory[type]=hist;counts[q.id]=(counts[q.id]||0)+1;state.data.questionCounts[type]=counts;return q;}
+function rand(a){return a[Math.floor(Math.random()*a.length)];}
+function show(html){$('modal').innerHTML=html;$('overlay').style.display='flex';}function close(){if(state.active)state.active=null;$('overlay').style.display='none';draw();save(true);}$('overlay').addEventListener('click',e=>{if(e.target===$('overlay'))close();});
+async function encounter(){if(state.active)return;const area=areas[state.player.area];let pool=[...area.common];if(Math.random()<.22)pool.push(...area.rare);if(state.player.area===8&&Math.random()<.025)pool.push(...LEGENDARY,...MYTHICAL);let id=rand(pool.filter(Number.isInteger));if(!id)id=25;let p=await pokemon(id);state.data.encounters++;if(!state.data.seen.includes(id))state.data.seen.push(id);const total=['희귀','전설','환상'].includes(p.rarity)||LEGENDARY.includes(id)||MYTHICAL.includes(id)?4:2;const types=shuffle(['영어','한글','덧셈','뺄셈']);state.active={pokemon:p,total,index:0,questions:Array.from({length:total},(_,i)=>pickQuestion(types[i%4]))};renderBattle();save(true);}
+function renderBattle(){const a=state.active,p=a.pokemon,q=a.questions[a.index];show(`<h2>야생 ${p.name}이(가) 나타났다!</h2><div class="battle"><div class="pokeinfo"><b>${p.name}</b><div class="small">${p.types.join(' · ')||'포켓몬'} · ${p.rarity}</div><div class="progress"><span style="width:${a.index/a.total*100}%"></span></div></div><img class="wild" src="${sprite(p.id)}" alt="${p.name}" onerror="this.style.display='none'"><img class="trainer" src="${sprite(25)}" alt="트레이너"></div><div class="battletext"><b>${q.q}</b><div class="answers">${q.opts.map((o,i)=>`<button data-answer="${i}">${['①','②','③','④'][i]} ${o}</button>`).join('')}</div><div class="small">문제 ${a.index+1} / ${a.total} · 정답을 맞히면 다음 문제로!</div></div><p class="small muted">틀려도 괜찮아요. 다시 생각해서 골라 보세요.</p>`);$('modal').querySelectorAll('[data-answer]').forEach(b=>b.onclick=()=>answer(Number(b.dataset.answer)));}
+function answer(n){const a=state.active,q=a.questions[a.index];if(n===q.answer){a.index++;if(a.index>=a.total)capture();else renderBattle();}else{const old=$('modal').querySelector('.battletext .feedback');if(old)old.remove();$('modal').querySelector('.battletext').insertAdjacentHTML('beforeend','<div class="feedback status">아쉽지만 괜찮아! 다시 생각해 보자.</div>');}}
+function capture(){const p=state.active.pokemon,first=!state.data.caught.includes(p.id);if(first)state.data.caught.push(p.id);save(true);show(`<h2>포획 성공!</h2><img class="captureImg" style="display:block;width:170px;height:170px;object-fit:contain;margin:auto" src="${sprite(p.id)}" alt="${p.name}"><h2 style="text-align:center">${p.name}</h2><p style="text-align:center">${first?'처음 만난 포켓몬이 도감에 등록되었어!':'이미 도감에 등록된 포켓몬이야. 다시 만나서 반가워!'}</p><div class="row" style="justify-content:center"><button id="captureDex">도감 보기</button><button id="captureContinue">계속 탐험</button></div>`);$('captureDex').onclick=()=>{state.active=null;openDex();};$('captureContinue').onclick=close;}
+let dexPage=0;async function openDex(){state.active=null;const pageSize=30;show(`<h2>포켓몬 도감 <span class="small">${state.data.caught.length} / ${DEX.length} 포획</span></h2><div class="row"><span class="small">포획한 포켓몬은 컬러 이미지로 표시돼요.</span><button class="secondary" id="dexPrev">이전</button><button class="secondary" id="dexNext">다음</button></div><div class="dexgrid" id="dexgrid"></div><button id="dexClose">닫기</button>`);const grid=$('dexgrid');const start=dexPage*pageSize,ids=DEX.slice(start,start+pageSize);ids.forEach(id=>{let caught=state.data.caught.includes(id),seen=state.data.seen.includes(id),div=document.createElement('div');div.className='dexitem';div.innerHTML=`<img class="${caught?'':'hidden'}" loading="lazy" src="${sprite(id)}" alt="포켓몬"><b>#${String(id).padStart(4,'0')} ${caught||seen?(fallback[id]||'정보 불러오는 중'):'???'}</b><div>${caught?'포획 완료':seen?'발견':'미발견'}</div><div class="detail">${caught?'상세 정보 불러오는 중':''}</div>`;grid.appendChild(div);if(caught||seen)pokemon(id).then(p=>{div.querySelector('b').textContent=`#${String(id).padStart(4,'0')} ${p.name}`;div.querySelector('.detail').textContent=caught?`${p.types.join(' · ')} · ${p.height??'—'}m · ${p.weight??'—'}kg`:p.types.join(' · ');});});$('dexPrev').disabled=dexPage===0;$('dexNext').disabled=start+pageSize>=DEX.length;$('dexPrev').onclick=()=>{dexPage=Math.max(0,dexPage-1);openDex();};$('dexNext').onclick=()=>{dexPage++;openDex();};$('dexClose').onclick=close;}
+function openStudy(){show(`<h2>학습 영역</h2><p>각 영역에는 80개 이상의 문제가 준비되어 있어요. 실제 조우에서는 최근 문제와 출제 빈도를 고려해 출제합니다.</p><div class="field">${Object.entries(questionBanks).map(([t,a])=>`<button data-qtype="${t}">${t}<br><span class="small">${a.length}개 문제</span></button>`).join('')}</div><div id="sample" class="status">영역을 선택하면 문제 예시를 볼 수 있어요.</div><button id="studyClose">닫기</button>`);$('modal').querySelectorAll('[data-qtype]').forEach(b=>b.onclick=()=>{let q=rand(questionBanks[b.dataset.qtype]);$('sample').innerHTML=`<b>${b.dataset.qtype} · ${q.q}</b><div class="small">${q.opts.join(' / ')}</div>`;});$('studyClose').onclick=close;}
+function openMap(){show(`<h2>지역 안내</h2><div class="field">${areas.map((a,i)=>`<button data-area="${i}">${i+1}. ${a.name}<br><span class="small">${state.data.visited.includes(i)?'탐험한 지역':'아직 방문하지 않음'}</span></button>`).join('')}</div><p class="small muted">지역은 동쪽·서쪽 출입구를 통해 연결됩니다. 가운데 길을 따라 이동해 보세요.</p><button id="mapClose">닫기</button>`);$('modal').querySelectorAll('[data-area]').forEach(b=>b.onclick=()=>{let target=Number(b.dataset.area);if(!state.data.visited.includes(target)){$('message').textContent='아직 발견하지 않은 지역이에요. 길을 따라 탐험해 보세요.';return;}state.player.area=target;state.player.x=2;state.player.y=6;close();});$('mapClose').onclick=close;}
+function openSettings(){const chars=[['red','빨간 모험가'],['blue','파란 모험가'],['green','초록 모험가'],['yellow','노란 모험가']];show(`<h2>모험 설정 · ${state.profile===0?'하준이':'하늘이'}</h2><h3>주인공 선택</h3><div class="field">${chars.map(([id,n])=>`<button data-char="${id}" class="${state.data.character===id?'':'secondary'}">${n}</button>`).join('')}</div><h3>동행 포켓몬</h3><p class="small">포획한 포켓몬만 동행 포켓몬으로 선택할 수 있어요.</p><div id="companions"></div><button id="noCompanion" class="secondary">동행 포켓몬 없음</button><h3>풀숲 조우 빈도</h3><select id="rate"><option value="0.10">느긋하게 (낮음)</option><option value="0.16">보통</option><option value="0.23">자주 만나기 (높음)</option></select><div class="row" style="margin-top:12px"><button id="settingsSave">저장</button><button id="settingsClose" class="secondary">닫기</button></div>`);$('rate').value=String(state.data.settings.encounterRate||.16);$('modal').querySelectorAll('[data-char]').forEach(b=>b.onclick=()=>{state.data.character=b.dataset.char;openSettings();});let holder=$('companions');const ids=[25,...state.data.caught.filter(id=>id!==25)].slice(0,50);ids.forEach(id=>{const caught=state.data.caught.includes(id)||id===25;let div=document.createElement('div');div.className='choice '+(state.data.companion===id?'selected':'');div.innerHTML=`<img src="${sprite(id)}" alt=""><div><b>${fallback[id]||'포켓몬 #'+id}</b><div class="small">${id===25?'기본 동행 포켓몬':caught?'포획 완료':'미포획'}</div></div>`;div.onclick=()=>{if(!caught)return;state.data.companion=id;loadCompanion(id);openSettings();};holder.appendChild(div);if(id!==25)pokemon(id).then(p=>div.querySelector('b').textContent=p.name);});$('noCompanion').onclick=()=>{state.data.companion=null;openSettings();};$('settingsSave').onclick=()=>{state.data.settings.encounterRate=Number($('rate').value);loadCompanion(state.data.companion);save(true);close();$('message').textContent='설정을 저장했어요.';};$('settingsClose').onclick=close;}
+$('openDex').onclick=$('dex2').onclick=openDex;$('study').onclick=openStudy;$('map').onclick=openMap;$('settings').onclick=openSettings;$('save').onclick=()=>save();$('profile').onchange=()=>{save(true);state.profile=Number($('profile').value);load();dexPage=0;loadCompanion(state.data.companion);draw();$('message').textContent=`${state.profile===0?'하준이':'하늘이'} 모험 기록을 불러왔어요.`;};$('attendance').onclick=()=>{let d=new Date().toLocaleDateString('sv-SE');if(!state.data.attendance.includes(d)){state.data.attendance.push(d);save(true);$('message').textContent='오늘 출석 완료!';}else $('message').textContent='오늘은 이미 출석했어요.';};$('center').onclick=()=>$('message').textContent='방향 버튼을 길게 누르면 계속 이동해요.';
+load();loadCompanion(state.data.companion);draw();
 })();
-</script>
-<style>@keyframes shake{0%,100%{transform:translateX(0) rotate(0)}25%{transform:translateX(-5px) rotate(-12deg)}75%{transform:translateX(5px) rotate(12deg)}}</style>
-</body></html>
+</script></body></html>
