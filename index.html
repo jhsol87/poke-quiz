@@ -31,39 +31,86 @@ const areas=[
 ];
 // Keep encounter tables numeric and curated.
 areas[2].common=[7,8,54,60,79,98,118,129,];areas[3].common=[27,28,37,74,104,111,];areas[4].common=[86,87,220,225,238,361,363];areas[5].common=[4,5,6,37,58,77,126];areas[6].common=[35,39,43,44,69,102,175];areas[8].common=[41,42,66,67,74,75,95,208,302];
-function makeMap(i){let m=Array.from({length:13},(_,y)=>Array.from({length:20},(_,x)=>(x===0||x===19||y===0||y===12)?'#':'.')); // west/east gates at y=6
-m[6][0]='.';m[6][19]='.';
-// central winding trail, open entry and exit
-for(let x=1;x<19;x++)m[6][x]='.';
-const rand=(x,y)=>((x*17+y*31+i*13)%11);
-for(let y=1;y<12;y++)for(let x=1;x<19;x++){if(y===6||x===1||x===18)continue;let r=rand(x,y);if(r<2)m[y][x]='g';else if(r===4&&i!==0)m[y][x]='o';}
-// region-specific obstacles, never seal the central path
-for(let y=2;y<11;y++)for(let x=3;x<17;x++){if(y===6)continue;let v=(x*7+y*5+i*3)%29;if(v===0||v===1)m[y][x]='#';}
-return m.map(r=>r.join(''));}
+function makeMap(i){
+ // Each region is a small connected maze with a different route shape.
+ // # wall, g grass, o rock, T tree, ~ water, C crystal, ^ cliff, L lava, F flower, R reeds
+ const m=Array.from({length:13},()=>Array(20).fill('#'));
+ const carve=(x,y)=>{if(x>=0&&x<20&&y>=0&&y<13)m[y][x]='.';};
+ const path=(pts)=>{for(let n=1;n<pts.length;n++){let [x1,y1]=pts[n-1],[x2,y2]=pts[n];let x=x1,y=y1;carve(x,y);while(x!==x2||y!==y2){if(x!==x2)x+=Math.sign(x2-x);else y+=Math.sign(y2-y);carve(x,y);}}};
+ const routes=[
+  [[[0,6],[4,6],[4,3],[9,3],[9,8],[14,8],[14,5],[19,5],[19,6]],[[4,3],[4,1],[7,1]],[[9,8],[9,10],[12,10]]],
+  [[[0,6],[3,6],[3,2],[8,2],[8,5],[12,5],[12,9],[16,9],[16,6],[19,6]],[[3,2],[3,1],[6,1]],[[8,5],[6,7],[6,10],[10,10]],[[12,5],[15,3],[18,3]]],
+  [[[0,6],[4,6],[4,9],[8,9],[8,4],[13,4],[13,7],[17,7],[17,6],[19,6]],[[4,9],[4,11],[7,11]],[[8,4],[8,2],[12,2]],[[13,7],[13,10],[16,10]]],
+  [[[0,6],[3,6],[3,3],[7,3],[7,8],[11,8],[11,4],[16,4],[16,6],[19,6]],[[3,3],[3,1],[6,1]],[[7,8],[7,10],[10,10]],[[11,4],[14,2],[18,2]]],
+  [[[0,6],[4,6],[4,2],[9,2],[9,6],[13,6],[13,10],[17,10],[17,6],[19,6]],[[4,2],[4,1],[7,1]],[[9,6],[9,9],[6,9]],[[13,6],[16,3],[18,3]]],
+  [[[0,6],[3,6],[3,9],[7,9],[7,4],[11,4],[11,7],[15,7],[15,3],[19,3],[19,6]],[[3,9],[3,11],[6,11]],[[7,4],[7,1],[10,1]],[[11,7],[11,10],[14,10]]],
+  [[[0,6],[4,6],[4,3],[8,3],[8,8],[12,8],[12,4],[16,4],[16,6],[19,6]],[[4,3],[4,1],[7,1]],[[8,8],[8,10],[11,10]],[[12,4],[14,2],[18,2]]],
+  [[[0,6],[3,6],[3,2],[7,2],[7,6],[11,6],[11,10],[15,10],[15,5],[19,5],[19,6]],[[3,2],[3,1],[5,1]],[[7,6],[7,9],[9,9]],[[11,10],[11,11],[13,11]]],
+  [[[0,6],[4,6],[4,2],[8,2],[8,6],[12,6],[12,3],[16,3],[16,6],[19,6]],[[4,2],[4,1],[6,1]],[[8,6],[8,10],[11,10]],[[12,3],[12,1],[15,1]],[[16,6],[16,9],[18,9]]]
+ ];
+ routes[i].forEach(path);
+ // Connect the east-side arrival gate to the maze even when its final bend is above/below the gate.
+ let target=null,best=1e9;for(let yy=1;yy<12;yy++)for(let xx=1;xx<20;xx++){if(m[yy][xx]!=='.'||(xx===18&&yy===6)||(xx===19&&yy===6))continue;let d=Math.abs(18-xx)+Math.abs(6-yy);if(d<best){best=d;target=[xx,yy];}}if(target)path([[18,6],target]);
+ // Widen selected parts of the main route and branch corridors for child-friendly navigation.
+ for(let y=1;y<12;y++)for(let x=1;x<19;x++)if(m[y][x]==='.'&&((x+y+i)%4===0)){if(y+1<12&&m[y+1][x]==='#')m[y+1][x]='.';}
+ // Scatter encounter grass only on walkable ground, away from the narrow entrance tiles.
+ for(let y=1;y<12;y++)for(let x=1;x<19;x++)if(m[y][x]==='.'&&((x*7+y*11+i*5)%13===0)&&x>1&&x<18)m[y][x]='g';
+ // Characteristic scenery clusters; all decorative objects are solid obstacles.
+ const clusters=[
+  [['T',[[1,2],[2,2],[1,3],[17,10],[18,10],[17,11]]],['o',[[6,5],[7,5],[15,2]]]],
+  [['T',[[1,1],[2,1],[1,2],[17,1],[18,1],[17,2],[1,10],[2,10],[1,11]]],['o',[[10,2],[11,2],[15,8]]]],
+  [['~',[[1,2],[2,2],[1,3],[2,3],[16,9],[17,9],[18,9]]],['o',[[6,10],[7,10],[15,2]]]],
+  [['o',[[1,2],[2,2],[1,3],[17,9],[18,9],[17,10],[8,1],[9,1]]],['^',[[14,1],[15,1],[14,2]]]],
+  [['^',[[1,1],[2,1],[1,2],[17,1],[18,1],[17,2]]],['o',[[1,10],[2,10],[14,9]]],['~',[[15,10],[16,10]]]],
+  [['L',[[1,2],[2,2],[1,3],[17,9],[18,9],[17,10]]],['o',[[6,1],[7,1],[14,2]]]],
+  [['F',[[1,1],[2,1],[1,2],[17,1],[18,1],[17,2],[1,10],[2,10],[17,10]]],['T',[[15,9],[16,9]]]],
+  [['~',[[1,1],[2,1],[1,2],[2,2],[17,9],[18,9],[17,10],[18,10]]],['R',[[5,1],[6,1],[14,1],[15,1]]],['o',[[1,10],[2,10]]]],
+  [['C',[[1,1],[2,1],[1,2],[17,1],[18,1],[17,2],[1,10],[2,10]]],['o',[[6,10],[7,10],[14,9]]],['^',[[14,1],[15,1],[14,2]]]]
+ ];
+ for(const [tile,coords] of clusters[i])for(const [x,y] of coords)if(m[y][x]==='#')m[y][x]=tile;
+ // Open the two region gates and keep their approach tiles clear.
+ m[6][0]='.';m[6][1]='.';m[6][18]='.';m[6][19]='.';
+ return m.map(r=>r.join(''));
+}
 const maps=areas.map((_,i)=>makeMap(i));
 const state={profile:0,player:{x:2,y:6,area:0,dir:'down'},data:null,active:null,dexCache:{},questionBanks:null,held:{},lastMove:0,companion:null};
 function blankData(){return {caught:[],seen:[],attendance:[],encounters:0,player:{x:2,y:6,area:0,dir:'down'},character:'red',companion:25,questionHistory:{},questionCounts:{},settings:{encounterRate:.16},visited:[0]};}
 function key(){return 'pokeSchool_v3_profile_'+state.profile}
-function load(){try{let d=JSON.parse(localStorage.getItem(key())||'null')||{};state.data={...blankData(),...d};state.data.player={...blankData().player,...(d.player||{})};state.data.questionHistory=d.questionHistory||{};state.data.questionCounts=d.questionCounts||{};state.player=state.data.player;}catch(e){state.data=blankData();state.player=state.data.player;} $('profile').value=String(state.profile);}
+function load(){try{let d=JSON.parse(localStorage.getItem(key())||'null')||{};state.data={...blankData(),...d};state.data.player={...blankData().player,...(d.player||{})};state.data.questionHistory=d.questionHistory||{};state.data.questionCounts=d.questionCounts||{};state.player=state.data.player;if(blocked(state.player.x,state.player.y)){state.player.x=2;state.player.y=6;} }catch(e){state.data=blankData();state.player=state.data.player;} $('profile').value=String(state.profile);}
 function save(silent=false){state.data.player=state.player;try{localStorage.setItem(key(),JSON.stringify(state.data));if(!silent)$('message').textContent='모험 기록을 저장했어요.';}catch(e){$('message').textContent='저장 공간이 부족해요. 브라우저 저장 공간을 확인해 주세요.';}}
 function sprite(id){return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`;}
 const fallback={1:'이상해씨',2:'이상해풀',3:'이상해꽃',4:'파이리',5:'리자드',6:'리자몽',7:'꼬부기',8:'어니부기',9:'거북왕',25:'피카츄',26:'라이츄',150:'뮤츠',151:'뮤'};
 async function pokemon(id){if(state.dexCache[id])return state.dexCache[id];let cached;try{cached=JSON.parse(localStorage.getItem('poke_meta_'+id)||'null');}catch(e){}if(cached&&!cached.unverified){state.dexCache[id]=cached;return cached;}try{const [pr,sr]=await Promise.all([fetch(API+'pokemon/'+id),fetch(API+'pokemon-species/'+id)]);if(!pr.ok||!sr.ok)throw Error('api');const p=await pr.json(),s=await sr.json();const entry={id,name:s.names?.find(n=>n.language.name==='ko')?.name||fallback[id]||p.name,types:p.types.sort((a,b)=>a.slot-b.slot).map(t=>typeKo[t.type.name]||t.type.name),height:p.height/10,weight:p.weight/10,genus:s.genera?.find(g=>g.language.name==='ko')?.genus||'포켓몬',rarity:MYTHICAL.includes(id)?'환상':LEGENDARY.includes(id)?'전설':areas.some(a=>a.rare.includes(id))?'희귀':'일반',sprite:p.sprites.front_default||sprite(id)};state.dexCache[id]=entry;try{localStorage.setItem('poke_meta_'+id,JSON.stringify(entry));}catch(e){}return entry;}catch(e){const entry={id,name:fallback[id]||`포켓몬 #${id}`,types:[],height:null,weight:null,genus:'정보 확인 필요',rarity:MYTHICAL.includes(id)?'환상':LEGENDARY.includes(id)?'전설':'일반',sprite:sprite(id),unverified:true};state.dexCache[id]=entry;return entry;}}
-function draw(){let t=32;ctx.clearRect(0,0,640,416);const a=areas[state.player.area],m=maps[state.player.area];const palettes={grass:['#a6ce8c','#82b66d'],forest:['#527b53','#315b43'],beach:['#f0d58d','#e8c36d'],desert:['#d9b879','#c69a5e'],snow:['#e7f1f3','#c7dce5'],volcano:['#8b6253','#5d4541'],flower:['#c2d88d','#a6c879'],swamp:['#7f9d78','#5b806c'],cave:['#777d8a','#555c6c']};let [base,alt]=palettes[a.theme];ctx.fillStyle=base;ctx.fillRect(0,0,640,416);
-for(let y=0;y<13;y++)for(let x=0;x<20;x++){let c=m[y][x],px=x*t,py=y*t;ctx.fillStyle=(x+y)%2?base:alt;ctx.fillRect(px,py,t,t);if(c==='#'){ctx.fillStyle=a.theme==='snow'?'#aabac2':a.theme==='desert'?'#9a815f':a.theme==='volcano'?'#443d40':a.theme==='cave'?'#353d4b':'#345b43';ctx.fillRect(px,py,t,t);ctx.fillStyle='#ffffff22';ctx.fillRect(px+4,py+4,24,5);}else if(c==='g'){ctx.fillStyle=a.theme==='flower'?'#6caa55':a.theme==='swamp'?'#477e59': '#4b994d';ctx.fillRect(px,py,t,t);ctx.strokeStyle=a.theme==='flower'?'#f6d9e7':'#c6e58a';ctx.lineWidth=2;for(let k=0;k<3;k++){ctx.beginPath();ctx.moveTo(px+7+k*8,py+26);ctx.lineTo(px+5+k*8,py+12);ctx.stroke();}}else if(c==='o'){ctx.fillStyle=a.theme==='snow'?'#fff':a.theme==='desert'?'#a68b69':'#6f7e70';ctx.beginPath();ctx.arc(px+16,py+16,11,0,Math.PI*2);ctx.fill();}}
-// Exit markers are always at west/east center.
-ctx.fillStyle='#f6d36e';ctx.fillRect(0,6*t+4,8,24);ctx.fillRect(19*t+24,6*t+4,8,24);
-// Character sprite-like avatar.
-const p=state.player,px=p.x*t,py=p.y*t;drawAvatar(ctx,px,py,p.dir,state.data.character);
-// companion follows with a small trailing offset
-if(state.data.companion){const off={up:[0,1],down:[0,-1],left:[1,0],right:[-1,0]}[p.dir]||[0,1],cx=(p.x+off[0])*t,cy=(p.y+off[1])*t;ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(cx+16,cy+18,10,0,Math.PI*2);ctx.fill();const im=companionImages[state.data.companion];if(im?.complete)ctx.drawImage(im,cx+1,cy+1,30,30);else{ctx.fillStyle='#e9b93f';ctx.fillRect(cx+8,cy+9,16,16);}}
-$('areaName').textContent=a.name;$('caughtCount').textContent=`도감 ${state.data.caught.length} / ${DEX.length}`;$('stats').textContent=`포획 ${state.data.caught.length}마리 · 발견 ${state.data.seen.length}마리 · 조우 ${state.data.encounters}회`;
+const companionImages={};let follower={x:2,y:7,tx:2,ty:7,dir:'down',phase:0,last:0};
+function loadCompanion(id){if(!id){follower=null;return;}let im=companionImages[id];if(!im){im=new Image();im.onload=()=>draw();im.onerror=()=>{im.onerror=null;im.src=sprite(id);};im.src=`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/${id}.gif`;companionImages[id]=im;}if(!follower)follower={x:state.player.x,y:state.player.y+1,tx:state.player.x,ty:state.player.y+1,dir:'down',phase:0,last:0};}
+function drawTile(c,x,y,t,theme){const px=x*t,py=y*t;
+ if(c==='#'){let col=theme==='snow'?'#9db3bd':theme==='desert'?'#9b8058':theme==='volcano'?'#443b3b':theme==='cave'?'#303947':theme==='beach'?'#b9a06c':'#355c43';ctx.fillStyle=col;ctx.fillRect(px,py,t,t);ctx.fillStyle='#ffffff22';ctx.fillRect(px+3,py+3,t-6,4);ctx.fillStyle='#00000018';ctx.fillRect(px+2,py+t-5,t-4,3);return;}
+ if(c==='T'){ctx.fillStyle='#6d5138';ctx.fillRect(px+13,py+16,7,15);ctx.fillStyle=theme==='snow'?'#dcebef':'#24583c';ctx.beginPath();ctx.arc(px+16,py+12,12,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(px+9,py+17,7,0,Math.PI*2);ctx.arc(px+23,py+17,7,0,Math.PI*2);ctx.fill();return;}
+ if(c==='o'){ctx.fillStyle=theme==='snow'?'#e9f1f2':theme==='desert'?'#a58b69':'#77827d';ctx.beginPath();ctx.ellipse(px+16,py+19,13,10,0,0,Math.PI*2);ctx.fill();ctx.fillStyle='#ffffff55';ctx.beginPath();ctx.ellipse(px+12,py+15,5,3,-.4,0,Math.PI*2);ctx.fill();return;}
+ if(c==='~'){ctx.fillStyle='#4b9fbd';ctx.fillRect(px,py,t,t);ctx.strokeStyle='#b7e8ed';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(px+4,py+10);ctx.quadraticCurveTo(px+12,py+5,px+20,py+10);ctx.moveTo(px+10,py+23);ctx.quadraticCurveTo(px+18,py+18,px+27,py+23);ctx.stroke();return;}
+ if(c==='C'){ctx.fillStyle='#455b77';ctx.fillRect(px+3,py+3,26,26);ctx.fillStyle='#8be4ed';ctx.beginPath();ctx.moveTo(px+16,py+3);ctx.lineTo(px+24,py+17);ctx.lineTo(px+16,py+28);ctx.lineTo(px+8,py+17);ctx.closePath();ctx.fill();ctx.fillStyle='#ffffffaa';ctx.fillRect(px+14,py+7,3,12);return;}
+ if(c==='^'){ctx.fillStyle='#777f8a';ctx.beginPath();ctx.moveTo(px+1,py+30);ctx.lineTo(px+16,py+2);ctx.lineTo(px+31,py+30);ctx.closePath();ctx.fill();ctx.fillStyle='#e9edf0';ctx.beginPath();ctx.moveTo(px+16,py+2);ctx.lineTo(px+22,py+14);ctx.lineTo(px+16,py+11);ctx.lineTo(px+10,py+15);ctx.closePath();ctx.fill();return;}
+ if(c==='L'){ctx.fillStyle='#453c3a';ctx.fillRect(px,py,t,t);ctx.fillStyle='#ed633c';ctx.beginPath();ctx.ellipse(px+16,py+18,12,7,0,0,Math.PI*2);ctx.fill();ctx.fillStyle='#ffd36a';ctx.fillRect(px+13,py+12,6,9);return;}
+ if(c==='F'){ctx.fillStyle='#6caa55';ctx.fillRect(px,py,t,t);for(const [dx,dy,col] of [[8,12,'#f28db6'],[23,9,'#fff0a0'],[18,24,'#d5a7f2']]){ctx.fillStyle=col;ctx.beginPath();ctx.arc(px+dx,py+dy,4,0,Math.PI*2);ctx.fill();ctx.fillStyle='#f4d55f';ctx.beginPath();ctx.arc(px+dx,py+dy,1.5,0,Math.PI*2);ctx.fill();}return;}
+ if(c==='R'){ctx.fillStyle='#6d9675';ctx.fillRect(px,py,t,t);ctx.strokeStyle='#d0d99a';ctx.lineWidth=3;for(let k=0;k<3;k++){ctx.beginPath();ctx.moveTo(px+7+k*8,py+30);ctx.quadraticCurveTo(px+4+k*8,py+15,px+8+k*8,py+5);ctx.stroke();}return;}
+ const ground=theme==='beach'?'#e8c978':theme==='desert'?'#c9a267':theme==='snow'?'#eaf3f4':theme==='volcano'?'#76605a':theme==='cave'?'#626b79':theme==='swamp'?'#8ca783':theme==='forest'?'#648d5e':'#9fc783';ctx.fillStyle=ground;ctx.fillRect(px,py,t,t);
+ if(c==='g'){ctx.fillStyle=theme==='flower'?'#5c9e4e':theme==='swamp'?'#3f7557':'#4a9349';ctx.fillRect(px+2,py+2,t-4,t-4);ctx.strokeStyle=theme==='flower'?'#f3c6df':'#c6e58a';ctx.lineWidth=2;for(let k=0;k<3;k++){ctx.beginPath();ctx.moveTo(px+7+k*8,py+27);ctx.lineTo(px+5+k*8,py+11);ctx.stroke();}if(theme==='flower'){ctx.fillStyle='#f6c9dd';ctx.fillRect(px+7,py+8,4,4);ctx.fillRect(px+22,py+16,4,4);}}
+ else if(theme==='beach'&&(x+y)%4===0){ctx.fillStyle='#fff1c1';ctx.fillRect(px+8,py+8,3,3);ctx.fillRect(px+23,py+23,2,2);}else if(theme==='snow'){ctx.fillStyle='#ffffff88';ctx.fillRect(px+7,py+8,3,3);ctx.fillRect(px+23,py+22,2,2);}else if(theme==='desert'&&(x+y)%3===0){ctx.fillStyle='#a98550';ctx.fillRect(px+8,py+22,12,2);}else if(theme==='cave'&&(x+y)%3===0){ctx.fillStyle='#8993a0';ctx.fillRect(px+5,py+5,3,3);}
 }
-function drawAvatar(c,x,y,dir,kind){const colors={red:['#c94d42','#243e59'],blue:['#477ac1','#253a58'],green:['#4f9365','#344d43'],yellow:['#e0b83e','#334b5d']},v=colors[kind]||colors.red;c.fillStyle=v[1];c.fillRect(x+8,y+18,16,13);c.fillStyle='#f2c29b';c.fillRect(x+10,y+7,12,12);c.fillStyle=v[0];c.fillRect(x+7,y+4,18,6);c.fillRect(x+6,y+9,5,3);c.fillStyle='#f5eee0';c.fillRect(x+8,y+30,7,3);c.fillRect(x+18,y+30,7,3);}
-const companionImages={};function loadCompanion(id){if(!id)return;let im=companionImages[id];if(!im){im=new Image();im.src=sprite(id);companionImages[id]=im;im.onload=draw;}}
-function blocked(x,y){if(y<1||y>11||x<0||x>19)return true;return maps[state.player.area][y][x]==='#';}
+function draw(){let t=32;ctx.clearRect(0,0,640,416);const a=areas[state.player.area],m=maps[state.player.area];for(let y=0;y<13;y++)for(let x=0;x<20;x++)drawTile(m[y][x],x,y,t,a.theme);
+ // Distinctive region landmarks in the upper/lower map margins.
+ const landmarks=[['마을 표지판', '#f3d46f'],['큰 고목', '#4b8b53'],['조개 바위', '#e7c77b'],['선인장', '#4e8c54'],['얼음 기둥', '#c9edf2'],['화산 분화구', '#ed7042'],['꽃 아치', '#e8a5c7'],['늪의 갈대', '#789b68'],['수정 결정', '#8ce3ed']];
+ const [label]=landmarks[state.player.area];ctx.fillStyle='#243047';ctx.font='bold 12px system-ui';ctx.fillText(label,10,15);
+ // Entrance markers are visually aligned with the traversable gates.
+ ctx.fillStyle='#f6d36e';ctx.fillRect(0,6*t+8,5,16);ctx.fillRect(19*t+27,6*t+8,5,16);
+ const p=state.player,px=p.x*t,py=p.y*t;drawAvatar(ctx,px,py,p.dir,state.data.character);
+ if(state.data.companion&&follower){const im=companionImages[state.data.companion];const fx=follower.x*t,fy=follower.y*t;ctx.fillStyle='#00000030';ctx.beginPath();ctx.ellipse(fx+16,fy+29,10,3,0,0,Math.PI*2);ctx.fill();if(im?.complete&&im.naturalWidth){let size=im.src.endsWith('.gif')?34:30;ctx.drawImage(im,fx+(32-size)/2,fy+1,size,size);}else{ctx.fillStyle='#e9b93f';ctx.beginPath();ctx.arc(fx+16,fy+16,8,0,Math.PI*2);ctx.fill();}}
+ $('areaName').textContent=a.name;$('caughtCount').textContent=`도감 ${state.data.caught.length} / ${DEX.length}`;$('stats').textContent=`포획 ${state.data.caught.length}마리 · 발견 ${state.data.seen.length}마리 · 조우 ${state.data.encounters}회`;
+}
+function drawAvatar(c,x,y,dir,kind){const colors={red:['#c94d42','#243e59'],blue:['#477ac1','#253a58'],green:['#4f9365','#344d43'],yellow:['#e0b83e','#334b5d']},v=colors[kind]||colors.red;c.fillStyle='#00000030';c.beginPath();c.ellipse(x+16,y+34,10,3,0,0,Math.PI*2);c.fill();c.fillStyle=v[1];c.fillRect(x+8,y+18,16,13);c.fillStyle='#f2c29b';c.fillRect(x+10, y+7,12,12);c.fillStyle=v[0];c.fillRect(x+7,y+4,18,6);c.fillRect(x+6,y+9,5,3);c.fillStyle='#f5eee0';c.fillRect(x+8,y+30,7,3);c.fillRect(x+18,y+30,7,3);}
+function blocked(x,y){if(y<1||y>11||x<0||x>19)return true;return ['#','o','T','~','C','^','L','R'].includes(maps[state.player.area][y][x]);}
 function move(dir){if(state.active)return;const d={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]}[dir];if(!d)return;let nx=state.player.x+d[0],ny=state.player.y+d[1];if(nx<0||nx>19){if(ny!==6){$('message').textContent='지역 출입구는 가운데 길에 있어요.';return;}const old=state.player.area;state.player.area=(old+(nx>19?1:8))%9;nx=nx<0?18:1;state.data.visited=Array.from(new Set([...state.data.visited,state.player.area]));$('message').textContent=`${areas[state.player.area].name}에 도착했어요!`;}
-if(blocked(nx,ny))return;state.player.x=nx;state.player.y=ny;state.player.dir=dir;draw();const tile=maps[state.player.area][ny][nx];if(tile==='g'&&Math.random()<(state.data.settings.encounterRate||.16))encounter();save(true);}
+if(blocked(nx,ny))return;const oldX=state.player.x,oldY=state.player.y,oldArea=state.player.area;state.player.x=nx;state.player.y=ny;state.player.dir=dir;if(state.data.companion){if(!follower)follower={x:oldX,y:oldY,tx:oldX,ty:oldY,dir,phase:0,last:0};follower.tx=oldX;follower.ty=oldY;follower.dir=dir;if(oldArea!==state.player.area){follower.x=nx;follower.y=ny+1;follower.tx=nx;follower.ty=ny+1;}}draw();const tile=maps[state.player.area][ny][nx];if(tile==='g'&&Math.random()<(state.data.settings.encounterRate||.16))encounter();save(true);}
 let keyDown={};window.addEventListener('keydown',e=>{let k=e.key.toLowerCase(),d={arrowup:'up',w:'up',arrowdown:'down',s:'down',arrowleft:'left',a:'left',arrowright:'right',d:'right'}[k];if(d){e.preventDefault();if(!keyDown[k])move(d);keyDown[k]=true;}});window.addEventListener('keyup',e=>delete keyDown[e.key.toLowerCase()]);window.addEventListener('blur',()=>keyDown={});
 let repeatTimer=null;document.querySelectorAll('[data-dir]').forEach(b=>{const start=e=>{e.preventDefault();let d=b.dataset.dir;move(d);clearInterval(repeatTimer);repeatTimer=setInterval(()=>move(d),180);};const stop=()=>clearInterval(repeatTimer);b.addEventListener('pointerdown',start);['pointerup','pointerleave','pointercancel'].forEach(ev=>b.addEventListener(ev,stop));});
 // Question banks: four pools each contain at least 80 distinct, deterministic questions.
@@ -92,5 +139,6 @@ function openMap(){show(`<h2>지역 안내</h2><div class="field">${areas.map((a
 function openSettings(){const chars=[['red','빨간 모험가'],['blue','파란 모험가'],['green','초록 모험가'],['yellow','노란 모험가']];show(`<h2>모험 설정 · ${state.profile===0?'하준이':'하늘이'}</h2><h3>주인공 선택</h3><div class="field">${chars.map(([id,n])=>`<button data-char="${id}" class="${state.data.character===id?'':'secondary'}">${n}</button>`).join('')}</div><h3>동행 포켓몬</h3><p class="small">포획한 포켓몬만 동행 포켓몬으로 선택할 수 있어요.</p><div id="companions"></div><button id="noCompanion" class="secondary">동행 포켓몬 없음</button><h3>풀숲 조우 빈도</h3><select id="rate"><option value="0.10">느긋하게 (낮음)</option><option value="0.16">보통</option><option value="0.23">자주 만나기 (높음)</option></select><div class="row" style="margin-top:12px"><button id="settingsSave">저장</button><button id="settingsClose" class="secondary">닫기</button></div>`);$('rate').value=String(state.data.settings.encounterRate||.16);$('modal').querySelectorAll('[data-char]').forEach(b=>b.onclick=()=>{state.data.character=b.dataset.char;openSettings();});let holder=$('companions');const ids=[25,...state.data.caught.filter(id=>id!==25)].slice(0,50);ids.forEach(id=>{const caught=state.data.caught.includes(id)||id===25;let div=document.createElement('div');div.className='choice '+(state.data.companion===id?'selected':'');div.innerHTML=`<img src="${sprite(id)}" alt=""><div><b>${fallback[id]||'포켓몬 #'+id}</b><div class="small">${id===25?'기본 동행 포켓몬':caught?'포획 완료':'미포획'}</div></div>`;div.onclick=()=>{if(!caught)return;state.data.companion=id;loadCompanion(id);openSettings();};holder.appendChild(div);if(id!==25)pokemon(id).then(p=>div.querySelector('b').textContent=p.name);});$('noCompanion').onclick=()=>{state.data.companion=null;openSettings();};$('settingsSave').onclick=()=>{state.data.settings.encounterRate=Number($('rate').value);loadCompanion(state.data.companion);save(true);close();$('message').textContent='설정을 저장했어요.';};$('settingsClose').onclick=close;}
 $('openDex').onclick=$('dex2').onclick=openDex;$('study').onclick=openStudy;$('map').onclick=openMap;$('settings').onclick=openSettings;$('save').onclick=()=>save();$('profile').onchange=()=>{save(true);state.profile=Number($('profile').value);load();dexPage=0;loadCompanion(state.data.companion);draw();$('message').textContent=`${state.profile===0?'하준이':'하늘이'} 모험 기록을 불러왔어요.`;};$('attendance').onclick=()=>{let d=new Date().toLocaleDateString('sv-SE');if(!state.data.attendance.includes(d)){state.data.attendance.push(d);save(true);$('message').textContent='오늘 출석 완료!';}else $('message').textContent='오늘은 이미 출석했어요.';};$('center').onclick=()=>$('message').textContent='방향 버튼을 길게 누르면 계속 이동해요.';
 load();loadCompanion(state.data.companion);draw();
+function animateFollower(ts){if(state.data?.companion&&follower){const dx=follower.tx-follower.x,dy=follower.ty-follower.y;follower.x+=dx*.18;follower.y+=dy*.18;follower.phase=ts/180;draw();}requestAnimationFrame(animateFollower);}requestAnimationFrame(animateFollower);
 })();
 </script></body></html>
