@@ -36,7 +36,7 @@ const DEX=[...new Set([...BASE_DEX,...ENCOUNTER_IDS,...SPECIAL_POOL])].sort((a,b
 function makeMap(i){
  // Each region is a small connected maze with a different route shape.
  // # wall, g grass, o rock, T tree, ~ water, C crystal, ^ cliff, L lava, F flower, R reeds
- const m=Array.from({length:13},()=>Array(20).fill('#'));
+ const m=Array.from({length:13},()=>Array(20).fill('b'));
  const carve=(x,y)=>{if(x>=0&&x<20&&y>=0&&y<13)m[y][x]='.';};
  const path=(pts)=>{for(let n=1;n<pts.length;n++){let [x1,y1]=pts[n-1],[x2,y2]=pts[n];let x=x1,y=y1;carve(x,y);while(x!==x2||y!==y2){if(x!==x2)x+=Math.sign(x2-x);else y+=Math.sign(y2-y);carve(x,y);}}};
  const routes=[
@@ -54,15 +54,15 @@ function makeMap(i){
  // Connect the east-side arrival gate to the maze even when its final bend is above/below the gate.
  let target=null,best=1e9;for(let yy=1;yy<12;yy++)for(let xx=1;xx<20;xx++){if(m[yy][xx]!=='.'||(xx===18&&yy===6)||(xx===19&&yy===6))continue;let d=Math.abs(18-xx)+Math.abs(6-yy);if(d<best){best=d;target=[xx,yy];}}if(target)path([[18,6],target]);
  // Widen selected parts of the main route and branch corridors for child-friendly navigation.
- for(let y=1;y<12;y++)for(let x=1;x<19;x++)if(m[y][x]==='.'&&((x+y+i)%4===0)){if(y+1<12&&m[y+1][x]==='#')m[y+1][x]='.';}
+ for(let y=1;y<12;y++)for(let x=1;x<19;x++)if(m[y][x]==='.'&&((x+y+i)%4===0)){if(y+1<12&&m[y+1][x]==='b')m[y+1][x]='.';}
  // Build three contiguous 4x3 grass patches around existing route tiles.
  // Each patch starts from a traversable route tile, so no grass island can be disconnected.
  const grassTargets=[[[14,9]],[[6,2],[10,7],[15,9]],[[5,8],[10,3],[15,7]],[[5,3],[9,9],[15,3]],[[6,2],[11,8],[15,3]],[[5,9],[9,3],[14,8]],[[6,3],[10,9],[15,3]],[[5,2],[9,8],[15,4]],[[6,2],[10,9],[15,2]]][i];
- for(const [tx,ty] of grassTargets){let anchor=null,best=1e9;for(let yy=1;yy<12;yy++)for(let xx=2;xx<18;xx++)if(m[yy][xx]==='.' ){const d=Math.abs(xx-tx)+Math.abs(yy-ty);if(d<best){best=d;anchor=[xx,yy];}}if(!anchor)continue;const [ax,ay]=anchor;for(let yy=Math.max(1,ay-1);yy<=Math.min(11,ay+1);yy++)for(let xx=Math.max(2,ax-1);xx<=Math.min(17,ax+2);xx++)if(m[yy][xx]==='.'||m[yy][xx]==='#')m[yy][xx]='g';} 
+ for(const [tx,ty] of grassTargets){let anchor=null,best=1e9;for(let yy=1;yy<12;yy++)for(let xx=2;xx<18;xx++)if(m[yy][xx]==='.' ){const d=Math.abs(xx-tx)+Math.abs(yy-ty);if(d<best){best=d;anchor=[xx,yy];}}if(!anchor)continue;const [ax,ay]=anchor;for(let yy=Math.max(1,ay-1);yy<=Math.min(11,ay+1);yy++)for(let xx=Math.max(2,ax-1);xx<=Math.min(17,ax+2);xx++)if(m[yy][xx]==='.'||m[yy][xx]==='b')m[yy][xx]='g';} 
  // Characteristic scenery clusters; all decorative objects are solid obstacles.
  const clusters=[
   // 초록마을: 주택과 광장, 작은 정원. 나무 숲이 아닌 생활 공간.
-  [['H',[[1,2],[2,2],[1,3],[16,1],[17,1],[16,2],[17,2],[9,10],[10,10]]],['P',[[8,6],[9,6],[10,6],[11,6]]],['f',[[4,1],[5,1],[14,10],[15,10]]],['o',[[6,5],[14,3]]]],
+  [['H',[[1,1],[16,1],[9,9]]],['I',[[2,1],[17,1],[10,9]]],['h',[[1,2],[16,2],[9,10]]],['i',[[2,2],[17,2],[10,10]]],['P',[[8,6],[9,6],[10,6],[11,6]]],['f',[[4,1],[5,1],[14,10],[15,10]]],['o',[[6,5],[14,3]]]],
   // 바람숲: 빽빽한 나무 덩어리와 바위.
   [['T',[[1,1],[2,1],[1,2],[17,1],[18,1],[17,2],[1,10],[2,10],[1,11],[17,10],[18,10],[17,11],[6,1],[7,1],[13,10],[14,10]]],['o',[[10,2],[11,2],[15,8]]]],
   [['~',[[1,2],[2,2],[1,3],[2,3],[16,9],[17,9],[18,9]]],['o',[[6,10],[7,10],[15,2]]]],
@@ -74,7 +74,7 @@ function makeMap(i){
   [['~',[[1,1],[2,1],[1,2],[2,2],[17,9],[18,9],[17,10],[18,10]]],['R',[[5,1],[6,1],[14,1],[15,1],[10,10],[11,10]]],['o',[[1,10],[2,10]]]],
   [['C',[[1,1],[2,1],[1,2],[17,1],[18,1],[17,2],[1,10],[2,10]]],['o',[[6,10],[7,10],[14,9]]],['^',[[14,1],[15,1],[14,2]]]]
  ];
- for(const [tile,coords] of clusters[i])for(const [x,y] of coords)if(m[y][x]==='#')m[y][x]=tile;
+ for(const [tile,coords] of clusters[i])for(const [x,y] of coords)if(m[y][x]==='b')m[y][x]=tile;
  // Open the two region gates and keep their approach tiles clear.
  m[6][0]='.';m[6][1]='.';m[6][18]='.';m[6][19]='.';
  return m.map(r=>r.join(''));
@@ -95,25 +95,131 @@ async function pokemon(id){if(state.dexCache[id]&&typeof state.dexCache[id].evol
 const companionImages={};let follower={x:2,y:7,tx:2,ty:7,dir:'down',phase:0,last:0};
 function loadCompanion(id){if(!id){follower=null;return;}follower={x:state.player.x,y:state.player.y+1,tx:state.player.x,ty:state.player.y+1,dir:'down',phase:0,last:0};let im=companionImages[id];if(!im){im=new Image();im.onload=()=>draw();im.onerror=()=>{im.onerror=null;im.src=sprite(id);};im.src=`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/${id}.gif`;companionImages[id]=im;}}
 function drawTile(c,x,y,t,theme){
- const px=x*t,py=y*t;
- const ground=theme==='town'?'#c9c9a0':theme==='beach'?'#e8c978':theme==='desert'?'#c9a267':theme==='snow'?'#eaf3f4':theme==='volcano'?'#76605a':theme==='cave'?'#626b79':theme==='swamp'?'#8ca783':theme==='forest'?'#648d5e':theme==='flower'?'#9bc96f':'#9fc783';
- ctx.fillStyle=ground;ctx.fillRect(px,py,t,t);
- // Small tile seams and texture keep the world readable at a glance.
- ctx.fillStyle='#0000000b';ctx.fillRect(px,py+t-2,t,2);
- if(c==='#'){let col=theme==='snow'?'#9db3bd':theme==='desert'?'#9b8058':theme==='volcano'?'#443b3b':theme==='cave'?'#303947':theme==='beach'?'#b9a06c':theme==='town'?'#a7a88b':'#355c43';ctx.fillStyle=col;ctx.fillRect(px,py,t,t);ctx.fillStyle='#ffffff22';ctx.fillRect(px+3,py+3,t-6,4);ctx.fillStyle='#00000022';ctx.fillRect(px+2,py+t-5,t-4,3);return;}
- if(c==='H'){ctx.fillStyle='#72513f';ctx.fillRect(px+3,py+10,26,21);ctx.fillStyle='#c85c4e';ctx.fillRect(px+1,py+5,30,9);ctx.fillStyle='#e9b66d';ctx.fillRect(px+5,py+7,22,4);ctx.fillStyle='#7cc2d0';ctx.fillRect(px+7,py+15,6,6);ctx.fillRect(px+20,py+15,6,6);ctx.fillStyle='#614638';ctx.fillRect(px+14,py+21,6,10);return;}
- if(c==='P'){ctx.fillStyle='#d7d1b1';ctx.fillRect(px,py,t,t);ctx.fillStyle='#b9b18f';ctx.fillRect(px+3,py+3,3,3);ctx.fillRect(px+22,py+20,3,3);return;}
- if(c==='f'){ctx.fillStyle='#9a754a';ctx.fillRect(px,py+9,t,4);ctx.fillRect(px,py+22,t,4);for(let k=4;k<32;k+=9)ctx.fillRect(px+k,py+5,3,23);return;}
- if(c==='T'){ctx.fillStyle='#6d5138';ctx.fillRect(px+13,py+18,7,14);ctx.fillStyle=theme==='snow'?'#dcebef':theme==='flower'?'#477f43':'#24583c';ctx.fillRect(px+5,py+4,22,13);ctx.fillRect(px+2,py+10,28,12);ctx.fillStyle='#39764b';ctx.fillRect(px+8,py+2,16,5);return;}
- if(c==='o'){ctx.fillStyle=theme==='snow'?'#e9f1f2':theme==='desert'?'#a58b69':'#77827d';ctx.fillRect(px+5,py+13,22,15);ctx.fillRect(px+9,py+8,14,7);ctx.fillStyle='#ffffff55';ctx.fillRect(px+9,py+11,7,3);return;}
- if(c==='~'){ctx.fillStyle='#4b9fbd';ctx.fillRect(px,py,t,t);ctx.fillStyle='#b7e8ed';ctx.fillRect(px+4,py+8,12,2);ctx.fillRect(px+17,py+19,11,2);ctx.fillStyle='#2d83a5';ctx.fillRect(px+8,py+13,12,2);return;}
- if(c==='C'){ctx.fillStyle='#455b77';ctx.fillRect(px+3,py+3,26,26);ctx.fillStyle='#8be4ed';ctx.fillRect(px+13,py+3,7,8);ctx.fillRect(px+8,py+11,17,10);ctx.fillRect(px+13,py+21,7,8);ctx.fillStyle='#ffffffaa';ctx.fillRect(px+14,py+6,3,12);return;}
- if(c==='^'){ctx.fillStyle='#777f8a';ctx.fillRect(px+2,py+17,28,13);ctx.fillRect(px+7,py+9,18,9);ctx.fillRect(px+12,py+3,8,7);ctx.fillStyle='#e9edf0';ctx.fillRect(px+13,py+4,6,5);return;}
- if(c==='L'){ctx.fillStyle='#453c3a';ctx.fillRect(px,py,t,t);ctx.fillStyle='#ed633c';ctx.fillRect(px+4,py+16,24,10);ctx.fillRect(px+9,py+10,14,7);ctx.fillStyle='#ffd36a';ctx.fillRect(px+13,py+12,6,9);return;}
- if(c==='F'){ctx.fillStyle='#77b85d';ctx.fillRect(px,py,t,t);for(const [dx,dy,col] of [[7,9,'#f28db6'],[22,7,'#fff0a0'],[17,23,'#d5a7f2']]){ctx.fillStyle=col;ctx.fillRect(px+dx,py+dy,5,5);ctx.fillStyle='#f4d55f';ctx.fillRect(px+dx+2,py+dy+2,2,2);}return;}
- if(c==='R'){ctx.fillStyle='#6d9675';ctx.fillRect(px,py,t,t);ctx.fillStyle='#d0d99a';for(let k=0;k<3;k++){ctx.fillRect(px+6+k*9,py+9,3,20);ctx.fillRect(px+4+k*9,py+7,3,5);}return;}
- if(c==='g'){ctx.fillStyle=theme==='flower'?'#5c9e4e':theme==='swamp'?'#3f7557':theme==='town'?'#68a95a':'#4a9349';ctx.fillRect(px+2,py+2,t-4,t-4);ctx.fillStyle=theme==='flower'?'#f3c6df':'#c6e58a';for(let k=0;k<3;k++){ctx.fillRect(px+6+k*8,py+11,2,16);ctx.fillRect(px+4+k*8,py+10,6,3);}if(theme==='flower'){ctx.fillStyle='#f6c9dd';ctx.fillRect(px+7,py+8,4,4);ctx.fillRect(px+22,py+16,4,4);}}
- else if(theme==='beach'&&(x+y)%4===0){ctx.fillStyle='#fff1c1';ctx.fillRect(px+8,py+8,3,3);ctx.fillRect(px+23,py+23,2,2);}else if(theme==='snow'){ctx.fillStyle='#ffffff88';ctx.fillRect(px+7,py+8,3,3);ctx.fillRect(px+23,py+22,2,2);}else if(theme==='desert'&&(x+y)%3===0){ctx.fillStyle='#a98550';ctx.fillRect(px+8,py+22,12,2);}else if(theme==='cave'&&(x+y)%3===0){ctx.fillStyle='#8993a0';ctx.fillRect(px+5,py+5,3,3);}else if(theme==='town'){ctx.fillStyle='#a4bd7b';if((x+y)%3===0)ctx.fillRect(px+7,py+8,4,4);}
+ const px=x*t,py=y*t,seed=(x*7+y*11)%5;
+ // Every tile is drawn from crisp, stepped pixel clusters rather than smooth vector shapes.
+ const palettes={
+  town:{base:'#82a96a',shade:'#668b55',light:'#b4c88a',path:'#c8b78a',path2:'#a99570',accent:'#e3d7ad'},
+  forest:{base:'#426b48',shade:'#2d5138',light:'#71945a',path:'#987b55',path2:'#75583f',accent:'#b3a06b'},
+  beach:{base:'#e6ca83',shade:'#c7a966',light:'#f4e1a8',path:'#d5b66f',path2:'#b99659',accent:'#fff0bf'},
+  desert:{base:'#c9a05f',shade:'#a87d48',light:'#e5c27b',path:'#d8b574',path2:'#b48b54',accent:'#f0d59a'},
+  snow:{base:'#dce9e8',shade:'#a9c2c5',light:'#f8ffff',path:'#c2d6d9',path2:'#91afb6',accent:'#ffffff'},
+  volcano:{base:'#665b58',shade:'#403a3a',light:'#92736a',path:'#88736a',path2:'#5b4d49',accent:'#e78b48'},
+  flower:{base:'#83b96a',shade:'#5c944e',light:'#b3d77c',path:'#c3ad79',path2:'#9d875d',accent:'#f5c6d9'},
+  swamp:{base:'#82916b',shade:'#596d54',light:'#a9b17a',path:'#93866a',path2:'#706b54',accent:'#b9c17c'},
+  cave:{base:'#626d78',shade:'#414c5b',light:'#8b98a0',path:'#85888a',path2:'#5b626b',accent:'#8de0e8'}
+ };
+ const q=palettes[theme]||palettes.town;
+ const fill=(col,rx,ry,rw,rh)=>{ctx.fillStyle=col;ctx.fillRect(px+rx,py+ry,rw,rh);};
+ // Natural ground tile (b): region-specific pixel texture.
+ if(c==='b'){
+  fill(q.base,0,0,t,t);fill(q.shade,0,29,t,3);
+  if(theme==='town'){
+   if(seed===0){fill('#9bb978',5,6,8,3);fill('#6f995c',7,9,4,3);}else if(seed===2){fill('#d0d69a',21,18,5,3);fill('#6c955a',23,21,3,3);}else{fill(q.light,4+(seed*5)%20,7+(seed%3)*7,3,2);}
+  }else if(theme==='forest'){
+   fill(q.light,4+seed*4,8,4,3);fill(q.shade,9+seed*3,21,7,3);fill('#a0ad68',21,5+seed,3,3);
+  }else if(theme==='beach'){
+   fill(q.light,4+seed*4,7,5,2);fill(q.path2,20,21-seed,3,2);fill(q.accent,12,14,2,2);
+  }else if(theme==='desert'){
+   fill(q.light,3,7+seed*2,18,3);fill(q.shade,16,24,12,2);fill('#ead39a',23,10,3,2);
+  }else if(theme==='snow'){
+   fill(q.light,4+seed*3,5,8,3);fill('#b6d1d5',18,22,8,3);fill('#ffffff',23,8,3,3);
+  }else if(theme==='volcano'){
+   fill(q.light,5,7+seed*2,5,2);fill(q.shade,18,20,10,4);if(seed===1){fill('#d56c3d',23,8,3,2);}
+  }else if(theme==='flower'){
+   fill(q.light,4,7,3,3);fill('#e9c4d0',17,21,4,4);fill('#e7d46e',18,22,2,2);fill(q.shade,26,8,3,3);
+  }else if(theme==='swamp'){
+   fill(q.shade,3,19,12,5);fill('#a8b17a',19,7,8,3);fill('#6d8a69',23,24,4,3);
+  }else if(theme==='cave'){
+   fill(q.light,5,6,5,3);fill(q.shade,19,20,9,5);fill(q.accent,22,9,3,3);
+  }
+  return;
+ }
+ // Walkways (.) use a distinct material per region; the town gets a clear cobblestone lane.
+ if(c==='.'){
+  fill(q.path,0,0,t,t);fill(q.path2,0,28,t,4);
+  if(theme==='town'){
+   fill('#dfd0a6',2,3,12,3);fill('#ad9c77',17,3,13,2);fill('#b6a27b',4,13,9,3);fill('#e0d1a8',18,18,11,3);fill('#a8956e',11,25,8,2);
+   fill('#d9c69a',14,8,2,3);fill('#d9c69a',26,23,2,3);
+  }else if(theme==='forest'){
+   fill('#b59a6a',3,5,12,3);fill('#806344',18,17,11,4);fill('#d0b17a',8,24,8,2);
+  }else if(theme==='beach'){
+   fill('#f1dda2',3,8,9,2);fill('#b99659',18,20,8,2);fill('#fff0bd',23,5,4,2);
+  }else if(theme==='desert'){
+   fill('#edcf91',3,5,16,3);fill('#a77d4b',19,21,10,3);fill('#e7c27c',8,15,7,2);
+  }else if(theme==='snow'){
+   fill('#f7ffff',3,5,12,3);fill('#9dbbc2',18,19,10,3);fill('#ffffff',8,24,7,2);
+  }else if(theme==='volcano'){
+   fill('#a28b7d',3,5,13,3);fill('#4c4545',18,19,10,4);fill('#d17a4c',9,24,4,2);
+  }else if(theme==='flower'){
+   fill('#e0c995',3,5,13,3);fill('#a18b61',18,19,10,3);fill('#f0dba7',8,24,7,2);
+  }else if(theme==='swamp'){
+   fill('#b0a17a',3,6,12,3);fill('#6b735b',18,20,10,3);fill('#c0b183',8,24,7,2);
+  }else if(theme==='cave'){
+   fill('#a6afb0',3,5,12,3);fill('#4b5662',18,19,10,4);fill('#c4d0cc',8,24,7,2);
+  }
+  return;
+ }
+ if(c==='#'){fill(q.shade,0,0,t,t);fill(q.light,3,3,25,4);fill(q.path2,2,25,27,4);return;}
+ if(c==='H'||c==='I'){
+  // Upper half of a 2x2 village house: continuous stepped terracotta roof.
+  fill('#4b513e',0,27,32,5);fill('#7e493e',0,12,32,16);fill('#a95d4b',0,7,32,10);fill('#d88b63',3,4,26,5);fill('#e5a16b',7,2,18,3);fill('#6f4039',0,25,32,3);fill('#f0c783',c==='H'?4:18,10,8,3);return;
+ }
+ if(c==='h'||c==='i'){
+  // Lower half of the house: plaster wall, windows, and a door split across tiles.
+  fill('#4b513e',1,29,30,3);fill('#d9bd83',2,0,28,30);fill('#a98758',2,0,28,3);if(c==='h'){fill('#6b9da0',5,8,8,9);fill('#f2dda6',4,7,10,2);fill('#f2dda6',4,17,10,2);fill('#8a6248',19,9,8,14);}else{fill('#6b9da0',5,8,8,9);fill('#f2dda6',4,7,10,2);fill('#f2dda6',4,17,10,2);fill('#684b3b',18,5,9,25);fill('#e8c47c',20,16,2,2);}return;
+ }
+ if(c==='P'){
+  fill('#d6c69a',0,0,32,32);fill('#b39d72',2,3,12,3);fill('#ead9ae',17,3,12,3);fill('#b39d72',4,16,10,3);fill('#ead9ae',19,17,11,3);fill('#b39d72',14,25,5,3);return;
+ }
+ if(c==='f'){
+  fill('#80613e',0,9,32,4);fill('#b58b55',0,7,32,3);fill('#80613e',0,22,32,4);for(let k=3;k<32;k+=9){fill('#d3ad70',k,4,3,24);fill('#72543a',k+3,8,2,16);}return;
+ }
+ if(c==='T'){
+  fill('#654832',13,19,7,13);fill(theme==='snow'?'#e9f4f1':theme==='flower'?'#548c49':'#244d35',5,9,22,15);fill(theme==='snow'?'#f9ffff':theme==='flower'?'#75ad53':'#39734a',9,3,15,12);fill(theme==='snow'?'#c8e0e2':'#1d422f',3,14,26,10);fill('#a2bd6c',12,5,5,3);return;
+ }
+ if(c==='o'){
+  fill(theme==='snow'?'#e7f0f0':theme==='desert'?'#a78a61':theme==='cave'?'#7e8995':'#747d72',4,15,24,14);fill(theme==='snow'?'#faffff':'#92998d',8,9,17,9);fill('#ffffff66',9,10,8,3);fill('#414c4a55',7,26,18,3);return;
+ }
+ if(c==='~'){
+  fill('#347f9c',0,0,32,32);fill('#5cb1c5',0,5,32,8);fill('#276e91',0,18,32,10);fill('#b9e5df',3,7,12,2);fill('#d2eee3',19,21,10,2);fill('#2a7792',13,14,8,3);return;
+ }
+ if(c==='C'){
+  fill('#394c68',3,7,26,23);fill('#6cc8d5',12,2,9,28);fill('#9cebf0',7,12,18,11);fill('#e3ffff',14,4,4,18);fill('#527f9c',4,26,24,4);return;
+ }
+ if(c==='^'){
+  fill('#626e78',1,18,30,13);fill('#7f8d98',6,10,20,10);fill('#b6c4c8',12,3,9,9);fill('#e8f2ef',14,4,4,4);return;
+ }
+ if(c==='L'){
+  fill('#332e32',0,0,32,32);fill('#a64c36',3,16,26,12);fill('#e26b37',7,11,18,10);fill('#ffc15a',12,14,8,7);fill('#f38c45',3,27,26,3);return;
+ }
+ if(c==='F'){
+  fill('#77a957',0,0,32,32);for(const [dx,dy,col] of [[5,8,'#ef91b9'],[21,6,'#fff0a0'],[14,21,'#d6a8ef']]){fill(col,dx,dy,6,5);fill('#f3d45c',dx+2,dy+2,2,2);}fill('#477d43',7,14,3,11);fill('#477d43',23,12,3,12);return;
+ }
+ if(c==='R'){
+  fill('#6b8761',0,0,32,32);for(let k=0;k<3;k++){fill('#c0c77f',5+k*9,7,3,23);fill('#e0d79a',3+k*9,5,4,6);fill('#465f4e',7+k*9,18,2,8);}return;
+ }
+ if(c==='g'){
+  // Encounter patches are not all green grass: each biome gets its own recognizable encounter cover.
+  if(theme==='town'){
+   fill('#4f8c4b',1,3,30,26);fill('#75ae59',4,6,24,20);fill('#d6d17c',7,9,4,4);fill('#f0c4a1',19,15,4,4);fill('#397442',3,25,26,3);
+  }else if(theme==='forest'){
+   fill('#28553a',1,3,30,27);fill('#4f8a4c',4,5,24,22);for(let k=0;k<4;k++)fill('#9bbf63',4+k*7,12+(k%2)*4,3,14);
+  }else if(theme==='beach'){
+   fill('#b3a16a',1,4,30,25);fill('#4d9b91',4,9,24,18);for(let k=0;k<3;k++){fill('#d1df9a',6+k*9,8,3,19);fill('#e4d7a1',9+k*8,17,3,10);}fill('#eaf0c2',22,5,4,3);
+  }else if(theme==='desert'){
+   fill('#b38b50',1,5,30,24);fill('#d7b36f',4,8,24,18);fill('#8b9b55',7,12,3,12);fill('#8b9b55',18,10,4,14);fill('#e7cf8e',24,7,4,3);
+  }else if(theme==='snow'){
+   fill('#a9c7c9',1,5,30,23);fill('#edf8f5',4,7,24,20);fill('#8eb8c0',7,17,3,10);fill('#8eb8c0',21,12,3,13);fill('#ffffff',13,5,5,4);
+  }else if(theme==='volcano'){
+   fill('#493d3c',1,4,30,25);fill('#71564e',4,8,24,18);fill('#e77b3d',8,18,5,6);fill('#ffca62',9,17,3,3);fill('#e77b3d',21,10,4,5);fill('#342f32',14,6,3,5);
+  }else if(theme==='flower'){
+   fill('#5c984d',1,4,30,25);fill('#8fc36b',4,7,24,20);for(const [dx,dy,col] of [[5,8,'#f5b7d2'],[18,6,'#fff0a0'],[11,19,'#d6a9ef'],[23,17,'#f5b7d2']]){fill(col,dx,dy,5,5);fill('#f2d35d',dx+2,dy+2,2,2);}fill('#477e43',4,24,24,3);
+  }else if(theme==='swamp'){
+   fill('#526d52',1,4,30,25);fill('#82936a',4,8,24,18);for(let k=0;k<4;k++){fill('#c3c47d',5+k*7,7,3,21);fill('#536f51',7+k*7,15,2,11);}fill('#a8b77c',21,6,5,3);
+  }else{
+   fill('#4c5d6b',1,4,30,25);fill('#788c9a',4,8,24,18);fill('#9ae4e8',8,6,5,18);fill('#c8ffff',10,8,2,12);fill('#5b7789',20,13,4,12);fill('#9ae4e8',21,11,3,3);
+  }
+ }
 }
 function draw(){let t=32;ctx.imageSmoothingEnabled=false;ctx.clearRect(0,0,640,416);const a=areas[state.player.area],m=maps[state.player.area];for(let y=0;y<13;y++)for(let x=0;x<20;x++)drawTile(m[y][x],x,y,t,a.theme);
  // Entrance markers are visually aligned with the traversable gates.
@@ -123,7 +229,7 @@ function draw(){let t=32;ctx.imageSmoothingEnabled=false;ctx.clearRect(0,0,640,4
  $('areaName').textContent=a.name;$('caughtCount').textContent=`도감 ${state.data.caught.length} / ${DEX.length}`;$('stats').textContent=`포획 ${state.data.caught.length}마리 · 발견 ${state.data.seen.length}마리 · 조우 ${state.data.encounters}회 · 특별 조우 ${state.data.specialEncounterProgress}/20`; 
 }
 function drawAvatar(c,x,y,dir,kind){const colors={red:['#c94d42','#243e59'],blue:['#477ac1','#253a58'],green:['#4f9365','#344d43'],yellow:['#e0b83e','#334b5d']},v=colors[kind]||colors.red;c.fillStyle='#00000030';c.beginPath();c.ellipse(x+16,y+34,10,3,0,0,Math.PI*2);c.fill();c.fillStyle=v[1];c.fillRect(x+8,y+18,16,13);c.fillStyle='#f2c29b';c.fillRect(x+10, y+7,12,12);c.fillStyle=v[0];c.fillRect(x+7,y+4,18,6);c.fillRect(x+6,y+9,5,3);c.fillStyle='#f5eee0';c.fillRect(x+8,y+30,7,3);c.fillRect(x+18,y+30,7,3);}
-function blocked(x,y){if(y<1||y>11||x<0||x>19)return true;return ['#','o','T','~','C','^','L','R','H','f'].includes(maps[state.player.area][y][x]);}
+function blocked(x,y){if(y<1||y>11||x<0||x>19)return true;return ['#','o','T','~','C','^','L','R','H','I','h','i','f'].includes(maps[state.player.area][y][x]);}
 function move(dir){if(state.active||state.encounterPending)return;const previousArea=state.player.area;const d={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]}[dir];if(!d)return;let nx=state.player.x+d[0],ny=state.player.y+d[1];if(nx<0||nx>19){if(ny!==6){$('message').textContent='지역 출입구는 가운데 길에 있어요.';return;}const old=state.player.area;state.player.area=(old+(nx>19?1:8))%9;nx=nx<0?18:1;state.data.visited=Array.from(new Set([...state.data.visited,state.player.area]));$('message').textContent=`${areas[state.player.area].name}에 도착했어요!`;}
 if(blocked(nx,ny))return;const oldX=state.player.x,oldY=state.player.y;state.player.x=nx;state.player.y=ny;state.player.dir=dir;if(state.data.companion){if(!follower)follower={x:oldX,y:oldY,tx:oldX,ty:oldY,dir,phase:0,last:0};if(previousArea!==state.player.area){const bx=nx-d[0],by=ny-d[1];follower.x=bx;follower.y=by;follower.tx=bx;follower.ty=by;follower.dir=dir;}else{follower.tx=oldX;follower.ty=oldY;follower.dir=dir;}}draw();const tile=maps[state.player.area][ny][nx];if(tile==='g'&&Math.random()<(state.data.settings.encounterRate||.16))encounter();save(true);}
 let keyDown={};window.addEventListener('keydown',e=>{let k=e.key.toLowerCase(),d={arrowup:'up',w:'up',arrowdown:'down',s:'down',arrowleft:'left',a:'left',arrowright:'right',d:'right'}[k];if(d){e.preventDefault();if($('overlay').style.display==='flex'||state.encounterPending)return;if(!keyDown[k])move(d);keyDown[k]=true;}});window.addEventListener('keyup',e=>delete keyDown[e.key.toLowerCase()]);window.addEventListener('blur',()=>keyDown={});
@@ -211,7 +317,7 @@ function renderBattle(){
  const savedCompanion=Number(state.data.companion);const companionId=Number.isInteger(savedCompanion)&&savedCompanion>0&&state.data.caught.includes(savedCompanion)?savedCompanion:null;
  const companionName=companionId?localPokemonName(companionId):'';
  show(`<h2>야생 ${p.name}이(가) 나타났다!</h2>
-  <div class="battle"><div class="pokeinfo"><b>${p.name}</b><div class="small">${p.types.join(' · ')||'포켓몬'} · ${LEGENDARY.includes(p.id)?'전설':MYTHICAL.includes(p.id)?'환상':p.evolved?'진화형':'일반'}</div><div class="progress"><span style="width:${a.index/a.total*100}%"></span></div></div>
+  <div class="battle"><div class="pokeinfo"><b>${p.name}</b><div class="small">${p.types.join(' · ')||'포켓몬'} · ${LEGENDARY.includes(p.id)?'전설':MYTHICAL.includes(p.id)?'환상':p.evolved?'진화형':'일반'}</div><div class="small">야생 포켓몬 체력</div><div class="progress"><span style="width:${Math.max(0,(a.total-a.index)/a.total*100)}%"></span></div></div>
   <img class="wild" src="${sprite(p.id)}" alt="${p.name}" onerror="this.style.display='none'">
   ${companionId?`<img id="allySprite" class="trainer" alt="${companionName}의 뒷모습"><div class="ally-label">우리 편 · ${companionName}</div>`:`<div class="ally-empty">동행 포켓몬을 설정하면 여기에 등장해요.</div>`}
   </div><div class="battletext"><b>${q.q}</b><div class="answers">${q.opts.map((o,i)=>`<button data-answer="${i}">${['①','②','③','④'][i]} ${o}</button>`).join('')}</div><div class="small">문제 ${a.index+1} / ${a.total} · 정답을 맞히면 다음 문제로!</div></div><p class="small muted">틀려도 괜찮아요. 다시 생각해서 골라 보세요.</p>`);
