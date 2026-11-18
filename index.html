@@ -55,10 +55,32 @@ function makeMap(i){
  let target=null,best=1e9;for(let yy=1;yy<12;yy++)for(let xx=1;xx<20;xx++){if(m[yy][xx]!=='.'||(xx===18&&yy===6)||(xx===19&&yy===6))continue;let d=Math.abs(18-xx)+Math.abs(6-yy);if(d<best){best=d;target=[xx,yy];}}if(target)path([[18,6],target]);
  // Widen selected parts of the main route and branch corridors for child-friendly navigation.
  for(let y=1;y<12;y++)for(let x=1;x<19;x++)if(m[y][x]==='.'&&((x+y+i)%4===0)){if(y+1<12&&m[y+1][x]==='b')m[y+1][x]='.';}
- // Build three contiguous 4x3 grass patches around existing route tiles.
- // Each patch starts from a traversable route tile, so no grass island can be disconnected.
- const grassTargets=[[[14,9]],[[6,2],[10,7],[15,9]],[[5,8],[10,3],[15,7]],[[5,3],[9,9],[15,3]],[[6,2],[11,8],[15,3]],[[5,9],[9,3],[14,8]],[[6,3],[10,9],[15,3]],[[5,2],[9,8],[15,4]],[[6,2],[10,9],[15,2]]][i];
- for(const [tx,ty] of grassTargets){let anchor=null,best=1e9;for(let yy=1;yy<12;yy++)for(let xx=2;xx<18;xx++)if(m[yy][xx]==='.' ){const d=Math.abs(xx-tx)+Math.abs(yy-ty);if(d<best){best=d;anchor=[xx,yy];}}if(!anchor)continue;const [ax,ay]=anchor;for(let yy=Math.max(1,ay-1);yy<=Math.min(11,ay+1);yy++)for(let xx=Math.max(2,ax-1);xx<=Math.min(17,ax+2);xx++)if(m[yy][xx]==='.'||m[yy][xx]==='b')m[yy][xx]='g';} 
+ // Encounter cover is placed as irregular natural clusters rather than rectangular farm-like plots.
+ const encounterAnchors=[
+  [[14,9]],[[6,2],[10,7],[15,9]],[[5,8],[10,3],[15,7]],[[5,3],[9,9],[15,3]],
+  [[6,2],[11,8],[15,3]],[[5,9],[9,3],[14,8]],[[6,3],[10,9],[15,3]],[[5,2],[9,8],[15,4]],[[6,2],[10,9],[15,2]]
+ ][i];
+ const shapes=[
+  [[0,0],[1,0],[2,0],[0,1],[1,1],[2,1],[1,2]], // rounded garden
+  [[0,0],[1,0],[2,0],[0,1],[1,1],[2,1],[1,2],[2,2]], // forest undergrowth
+  [[0,0],[1,0],[0,1],[1,1],[2,1],[1,2]], // seaweed / tidal pools
+  [[0,0],[1,0],[0,1],[1,1],[2,1],[1,2]], // scrub
+  [[0,0],[1,0],[0,1],[1,1],[2,1]], // snowdrift
+  [[0,0],[1,0],[0,1],[1,1],[1,2]], // hot rock
+  [[0,0],[1,0],[2,0],[0,1],[1,1],[2,1],[1,2]], // flower patches
+  [[0,0],[1,0],[0,1],[1,1],[2,1],[1,2]], // reeds
+  [[0,0],[1,0],[0,1],[1,1],[2,1]] // crystal beds
+ ];
+ for(const [tx,ty] of encounterAnchors){
+  let anchor=null,best=1e9;
+  for(let yy=1;yy<12;yy++)for(let xx=2;xx<18;xx++)if(m[yy][xx]==='.' ){const d=Math.abs(xx-tx)+Math.abs(yy-ty);if(d<best){best=d;anchor=[xx,yy];}}
+  if(!anchor)continue;
+  const [ax,ay]=anchor;
+  for(const [dx,dy] of shapes[i])for(const [sx,sy] of [[0,0],[-1,0],[0,-1]]){
+   const xx=ax+dx+sx,yy=ay+dy+sy;
+   if(xx>=2&&xx<=17&&yy>=1&&yy<=11&&(m[yy][xx]==='.'||m[yy][xx]==='b'))m[yy][xx]='g';
+  }
+ }
  // Characteristic scenery clusters; all decorative objects are solid obstacles.
  const clusters=[
   // 초록마을: 주택과 광장, 작은 정원. 나무 숲이 아닌 생활 공간.
@@ -75,6 +97,36 @@ function makeMap(i){
   [['C',[[1,1],[2,1],[1,2],[17,1],[18,1],[17,2],[1,10],[2,10]]],['o',[[6,10],[7,10],[14,9]]],['^',[[14,1],[15,1],[14,2]]]]
  ];
  for(const [tile,coords] of clusters[i])for(const [x,y] of coords)if(m[y][x]==='b')m[y][x]=tile;
+ // Distinct landforms: preserve the connected paths while shaping each biome around them.
+ const paintBg=(x,y,tile)=>{if(x>=0&&x<20&&y>=1&&y<=11&&m[y][x]==='b')m[y][x]=tile;};
+ if(i===2){ // Beach: ocean borders frame a sandy coastal route.
+  for(let x=0;x<20;x++){if(m[0][x]==='b')m[0][x]='~';if(m[12][x]==='b')m[12][x]='~';}
+  for(let y=1;y<12;y++)if(y!==6){paintBg(0,y,'~');paintBg(19,y,'~');}
+  for(let x=1;x<19;x++){paintBg(x,1,'~');paintBg(x,11,'~');}
+  [[2,2],[3,2],[2,9],[15,2],[16,9],[17,9]].forEach(([x,y])=>paintBg(x,y,'o'));
+ }
+ if(i===3){ // Desert: broken dune ridges and rocky outcrops.
+  for(let y=1;y<12;y++)for(let x=1;x<19;x++)if(m[y][x]==='b'&&(x*3+y*5)%19===0)m[y][x]='^';
+ }
+ if(i===4){ // Snow: banks and frozen pools.
+  for(let x=1;x<19;x++){if(m[1][x]==='b'&&x%3!==0)m[1][x]='^';if(m[11][x]==='b'&&x%4!==0)m[11][x]='^';}
+  [[2,8],[3,8],[16,2],[17,2]].forEach(([x,y])=>paintBg(x,y,'~'));
+ }
+ if(i===5){ // Volcano: lava pockets among basalt shelves.
+  [[2,1],[3,1],[2,2],[16,9],[17,9],[17,10],[8,10],[9,10]].forEach(([x,y])=>paintBg(x,y,'L'));
+  for(let y=1;y<12;y++)for(let x=1;x<19;x++)if(m[y][x]==='b'&&(x+y*2)%23===0)m[y][x]='^';
+ }
+ if(i===6){ // Flower meadow: scattered flower beds across open grassland.
+  for(let y=1;y<12;y++)for(let x=1;x<19;x++)if(m[y][x]==='b'&&(x*7+y*3)%29===0)m[y][x]='F';
+ }
+ if(i===7){ // Swamp: pools and reeds separated by walkable banks.
+  [[1,2],[2,2],[1,3],[2,3],[16,8],[17,8],[16,9],[17,9],[8,10],[9,10]].forEach(([x,y])=>paintBg(x,y,'~'));
+  for(let x=1;x<19;x++)if(m[1][x]==='b'&&x%3===0)m[1][x]='R';
+ }
+ if(i===8){ // Cave: crystal seams embedded in rough rock.
+  [[3,2],[4,2],[3,3],[14,8],[15,8],[16,8],[8,10],[9,10]].forEach(([x,y])=>paintBg(x,y,'C'));
+  for(let y=1;y<12;y++)for(let x=1;x<19;x++)if(m[y][x]==='b'&&(x*5+y*7)%31===0)m[y][x]='^';
+ }
  // Open the two region gates and keep their approach tiles clear.
  m[6][0]='.';m[6][1]='.';m[6][18]='.';m[6][19]='.';
  return m.map(r=>r.join(''));
@@ -175,6 +227,7 @@ function drawTile(c,x,y,t,theme){
   fill('#80613e',0,9,32,4);fill('#b58b55',0,7,32,3);fill('#80613e',0,22,32,4);for(let k=3;k<32;k+=9){fill('#d3ad70',k,4,3,24);fill('#72543a',k+3,8,2,16);}return;
  }
  if(c==='T'){
+  drawTile('b',x,y,t,theme);
   // Transparent, stepped GBA-style tree sprite: only trunk and canopy pixels are painted.
   const trunk=theme==='snow'?'#765b43':'#765039';
   const dark=theme==='snow'?'#527b78':theme==='flower'?'#386c3d':'#183f2c';
@@ -190,6 +243,7 @@ function drawTile(c,x,y,t,theme){
   return;
  }
  if(c==='o'){
+  drawTile('b',x,y,t,theme);
   // Rock has no tile-sized backing: its irregular silhouette leaves the ground visible around it.
   const edge=theme==='snow'?'#728b8c':theme==='desert'?'#806342':theme==='cave'?'#394957':'#46534b';
   const body=theme==='snow'?'#c4d8d7':theme==='desert'?'#b69769':theme==='cave'?'#758593':'#858e83';
@@ -218,26 +272,38 @@ function drawTile(c,x,y,t,theme){
   fill('#6b8761',0,0,32,32);for(let k=0;k<3;k++){fill('#c0c77f',5+k*9,7,3,23);fill('#e0d79a',3+k*9,5,4,6);fill('#465f4e',7+k*9,18,2,8);}return;
  }
  if(c==='g'){
-  // Encounter patches are not all green grass: each biome gets its own recognizable encounter cover.
+  // Paint the underlying biome first, then lay organic pixel clusters over it.
+  drawTile('b',x,y,t,theme);
   if(theme==='town'){
-   fill('#4f8c4b',1,3,30,26);fill('#75ae59',4,6,24,20);fill('#d6d17c',7,9,4,4);fill('#f0c4a1',19,15,4,4);fill('#397442',3,25,26,3);
+   fill('#397442',2,22,27,7);fill('#4f8c4b',3,10,25,15);fill('#75ae59',6,7,18,15);
+   fill('#d6d17c',8,9,3,3);fill('#f0c4a1',20,14,3,3);
   }else if(theme==='forest'){
-   fill('#28553a',1,3,30,27);fill('#4f8a4c',4,5,24,22);for(let k=0;k<4;k++)fill('#9bbf63',4+k*7,12+(k%2)*4,3,14);
+   fill('#28553a',2,7,28,23);fill('#4f8a4c',4,5,24,22);
+   for(let k=0;k<5;k++){fill('#9bbf63',3+k*6,11+(k%2)*4,3,18);fill('#c0d879',4+k*6,8+(k%2)*4,2,4);}
   }else if(theme==='beach'){
-   fill('#b3a16a',1,4,30,25);fill('#4d9b91',4,9,24,18);for(let k=0;k<3;k++){fill('#d1df9a',6+k*9,8,3,19);fill('#e4d7a1',9+k*8,17,3,10);}fill('#eaf0c2',22,5,4,3);
+   fill('#b3a16a',2,20,28,8);fill('#4d9b91',3,8,26,17);
+   for(let k=0;k<4;k++){fill('#d1df9a',4+k*7,9+(k%2)*3,3,16);fill('#e4d7a1',7+k*6,17,3,10);}
+   fill('#eaf0c2',23,6,4,3);
   }else if(theme==='desert'){
-   fill('#b38b50',1,5,30,24);fill('#d7b36f',4,8,24,18);fill('#8b9b55',7,12,3,12);fill('#8b9b55',18,10,4,14);fill('#e7cf8e',24,7,4,3);
+   fill('#b38b50',2,20,28,8);fill('#d7b36f',4,8,24,16);
+   fill('#8b9b55',7,12,3,12);fill('#8b9b55',18,10,4,14);fill('#ead39a',24,7,4,3);
   }else if(theme==='snow'){
-   fill('#a9c7c9',1,5,30,23);fill('#edf8f5',4,7,24,20);fill('#8eb8c0',7,17,3,10);fill('#8eb8c0',21,12,3,13);fill('#ffffff',13,5,5,4);
+   fill('#a9c7c9',2,19,28,9);fill('#edf8f5',3,7,26,18);
+   fill('#8eb8c0',7,17,3,12);fill('#8eb8c0',21,12,3,13);fill('#ffffff',13,5,5,4);
   }else if(theme==='volcano'){
-   fill('#493d3c',1,4,30,25);fill('#71564e',4,8,24,18);fill('#e77b3d',8,18,5,6);fill('#ffca62',9,17,3,3);fill('#e77b3d',21,10,4,5);fill('#342f32',14,6,3,5);
+   fill('#493d3c',2,19,28,9);fill('#71564e',3,7,26,18);
+   fill('#e77b3d',7,18,5,7);fill('#ffca62',8,16,3,4);fill('#e77b3d',21,10,4,6);fill('#342f32',14,6,3,5);
   }else if(theme==='flower'){
-   fill('#5c984d',1,4,30,25);fill('#8fc36b',4,7,24,20);for(const [dx,dy,col] of [[5,8,'#f5b7d2'],[18,6,'#fff0a0'],[11,19,'#d6a9ef'],[23,17,'#f5b7d2']]){fill(col,dx,dy,5,5);fill('#f2d35d',dx+2,dy+2,2,2);}fill('#477e43',4,24,24,3);
+   fill('#5c984d',2,21,28,7);fill('#8fc36b',3,7,26,18);
+   for(const [dx,dy,col] of [[4,8,'#f5b7d2'],[17,6,'#fff0a0'],[10,19,'#d6a9ef'],[23,16,'#f5b7d2']]){fill(col,dx,dy,5,5);fill('#f2d35d',dx+2,dy+2,2,2);}
   }else if(theme==='swamp'){
-   fill('#526d52',1,4,30,25);fill('#82936a',4,8,24,18);for(let k=0;k<4;k++){fill('#c3c47d',5+k*7,7,3,21);fill('#536f51',7+k*7,15,2,11);}fill('#a8b77c',21,6,5,3);
+   fill('#526d52',2,20,28,8);fill('#82936a',3,7,26,17);
+   for(let k=0;k<4;k++){fill('#c3c47d',4+k*7,7,3,21);fill('#536f51',6+k*7,15,2,11);}fill('#a8b77c',21,6,5,3);
   }else{
-   fill('#4c5d6b',1,4,30,25);fill('#788c9a',4,8,24,18);fill('#9ae4e8',8,6,5,18);fill('#c8ffff',10,8,2,12);fill('#5b7789',20,13,4,12);fill('#9ae4e8',21,11,3,3);
+   fill('#4c5d6b',2,20,28,8);fill('#788c9a',3,7,26,18);
+   fill('#9ae4e8',7,6,5,18);fill('#c8ffff',9,8,2,12);fill('#5b7789',20,13,4,12);fill('#9ae4e8',21,11,3,3);
   }
+  return;
  }
 }
 function draw(){let t=32;ctx.imageSmoothingEnabled=false;ctx.webkitImageSmoothingEnabled=false;ctx.mozImageSmoothingEnabled=false;ctx.clearRect(0,0,640,416);const a=areas[state.player.area],m=maps[state.player.area];for(let y=0;y<13;y++)for(let x=0;x<20;x++)drawTile(m[y][x],x,y,t,a.theme);
