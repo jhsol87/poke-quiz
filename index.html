@@ -175,10 +175,29 @@ function drawTile(c,x,y,t,theme){
   fill('#80613e',0,9,32,4);fill('#b58b55',0,7,32,3);fill('#80613e',0,22,32,4);for(let k=3;k<32;k+=9){fill('#d3ad70',k,4,3,24);fill('#72543a',k+3,8,2,16);}return;
  }
  if(c==='T'){
-  fill('#654832',13,19,7,13);fill(theme==='snow'?'#e9f4f1':theme==='flower'?'#548c49':'#244d35',5,9,22,15);fill(theme==='snow'?'#f9ffff':theme==='flower'?'#75ad53':'#39734a',9,3,15,12);fill(theme==='snow'?'#c8e0e2':'#1d422f',3,14,26,10);fill('#a2bd6c',12,5,5,3);return;
+  // Transparent, stepped GBA-style tree sprite: only trunk and canopy pixels are painted.
+  const trunk=theme==='snow'?'#765b43':'#765039';
+  const dark=theme==='snow'?'#527b78':theme==='flower'?'#386c3d':'#183f2c';
+  const mid=theme==='snow'?'#9fc9c8':theme==='flower'?'#57934a':'#28613a';
+  const hi=theme==='snow'?'#e4f3ef':theme==='flower'?'#8bc66a':'#57934e';
+  fill(trunk,13,21,6,11);fill('#493b32',12,29,9,3);
+  // outer silhouette with stepped shoulders
+  fill(dark,9,2,14,3);fill(dark,5,5,22,5);fill(dark,3,9,26,9);fill(dark,6,17,20,7);fill(dark,10,23,12,3);
+  // inner foliage layers
+  fill(mid,9,5,14,5);fill(mid,6,10,20,7);fill(mid,8,17,16,5);
+  fill(hi,11,5,8,3);fill(hi,7,10,6,3);fill(hi,17,13,6,3);
+  fill(theme==='snow'?'#f8ffff':'#9ac66a',13,3,4,2);fill(dark,4,15,3,4);fill(dark,25,13,3,5);
+  return;
  }
  if(c==='o'){
-  fill(theme==='snow'?'#e7f0f0':theme==='desert'?'#a78a61':theme==='cave'?'#7e8995':'#747d72',4,15,24,14);fill(theme==='snow'?'#faffff':'#92998d',8,9,17,9);fill('#ffffff66',9,10,8,3);fill('#414c4a55',7,26,18,3);return;
+  // Rock has no tile-sized backing: its irregular silhouette leaves the ground visible around it.
+  const edge=theme==='snow'?'#728b8c':theme==='desert'?'#806342':theme==='cave'?'#394957':'#46534b';
+  const body=theme==='snow'?'#c4d8d7':theme==='desert'?'#b69769':theme==='cave'?'#758593':'#858e83';
+  const hi=theme==='snow'?'#e8f2ed':theme==='desert'?'#dec28e':theme==='cave'?'#a8b8bd':'#b4b9a4';
+  fill(edge,7,17,18,11);fill(edge,4,20,24,7);fill(edge,9,12,15,6);fill(edge,12,8,9,5);
+  fill(body,8,17,16,8);fill(body,6,20,20,5);fill(body,11,12,12,6);fill(body,14,9,6,4);
+  fill(hi,12,12,7,3);fill(hi,9,17,5,2);fill(theme==='cave'?'#79cbd0':'#d4d0b8',18,19,4,2);
+  fill(edge,8,26,16,2);return;
  }
  if(c==='~'){
   fill('#347f9c',0,0,32,32);fill('#5cb1c5',0,5,32,8);fill('#276e91',0,18,32,10);fill('#b9e5df',3,7,12,2);fill('#d2eee3',19,21,10,2);fill('#2a7792',13,14,8,3);return;
@@ -221,7 +240,7 @@ function drawTile(c,x,y,t,theme){
   }
  }
 }
-function draw(){let t=32;ctx.imageSmoothingEnabled=false;ctx.clearRect(0,0,640,416);const a=areas[state.player.area],m=maps[state.player.area];for(let y=0;y<13;y++)for(let x=0;x<20;x++)drawTile(m[y][x],x,y,t,a.theme);
+function draw(){let t=32;ctx.imageSmoothingEnabled=false;ctx.webkitImageSmoothingEnabled=false;ctx.mozImageSmoothingEnabled=false;ctx.clearRect(0,0,640,416);const a=areas[state.player.area],m=maps[state.player.area];for(let y=0;y<13;y++)for(let x=0;x<20;x++)drawTile(m[y][x],x,y,t,a.theme);
  // Entrance markers are visually aligned with the traversable gates.
  ctx.fillStyle='#f6d36e';ctx.fillRect(0,6*t+8,5,16);ctx.fillRect(19*t+27,6*t+8,5,16);
  const p=state.player,px=p.x*t,py=p.y*t;drawAvatar(ctx,px,py,p.dir,state.data.character);
@@ -282,7 +301,11 @@ const questionBanks={};Object.keys(banks).forEach(t=>questionBanks[t]=finalizeBa
 while(questionBanks.한글.length<80){let i=questionBanks.한글.length,p=koreanPairs[i%koreanPairs.length];let q={q:`'${p[0]}'와 반대되는 뜻을 가진 낱말은?`,answer:p[1],opts:shuffle([p[1],koreanPairs[(i+5)%40][0],koreanPairs[(i+11)%40][0],koreanPairs[(i+17)%40][0]]),id:'한글_extra_'+i};q.answer=q.opts.indexOf(p[1]);questionBanks.한글.push(q);}
 function pickQuestion(type){let arr=questionBanks[type],hist=state.data.questionHistory[type]||[],counts=state.data.questionCounts[type]||{};let candidates=arr.filter(q=>!hist.includes(q.id));if(candidates.length<5)candidates=arr; candidates.sort((a,b)=>(counts[a.id]||0)-(counts[b.id]||0));let q=candidates.slice(0,Math.max(1,Math.min(12,candidates.length)));q=rand(q);hist.push(q.id);if(hist.length>Math.max(12,Math.floor(arr.length*.25)))hist.shift();state.data.questionHistory[type]=hist;counts[q.id]=(counts[q.id]||0)+1;state.data.questionCounts[type]=counts;return q;}
 function rand(a){return a[Math.floor(Math.random()*a.length)];}
-function show(html){$('modal').innerHTML=html;$('overlay').style.display='flex';}function close(){if(state.active)state.active=null;$('overlay').style.display='none';draw();save(true);}$('overlay').addEventListener('click',e=>{if(e.target===$('overlay')&&!state.encounterPending)close();});
+function show(html){$('modal').innerHTML=html;$('overlay').style.display='flex';}function close(){if(state.active)state.active=null;$('overlay').style.display='none';draw();save(true);}$('overlay').addEventListener('click',e=>{
+ // 전투 중에는 바깥 여백을 눌러도 배틀이 닫히지 않습니다.
+ // 배틀 종료는 포획 후 '계속 탐험' 등 명시적인 버튼으로만 처리합니다.
+ if(e.target===$('overlay')&&!state.encounterPending&&!state.active)close();
+});
 async function encounter(){
  if(state.active||state.encounterPending)return;
  state.encounterPending=true;$('message').textContent='야생 포켓몬을 확인하고 있어요…';
