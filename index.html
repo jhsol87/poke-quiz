@@ -127,6 +127,23 @@ function makeMap(i){
   [[3,2],[4,2],[3,3],[14,8],[15,8],[16,8],[8,10],[9,10]].forEach(([x,y])=>paintBg(x,y,'C'));
   for(let y=1;y<12;y++)for(let x=1;x<19;x++)if(m[y][x]==='b'&&(x*5+y*7)%31===0)m[y][x]='^';
  }
+ // Add a readable border along route edges. Keep openings wherever encounter grass
+ // touches the path, so children can step into the grass without searching for a gap.
+ const pathCells=[];
+ for(let y=1;y<12;y++)for(let x=1;x<19;x++)if(m[y][x]==='.')pathCells.push([x,y]);
+ const edgeCandidates=new Set();
+ for(const [x,y] of pathCells){
+   const around=[[x+1,y],[x-1,y],[x,y+1],[x,y-1]];
+   if(around.some(([ax,ay])=>ax>=0&&ax<20&&ay>=0&&ay<13&&m[ay][ax]==='g'))continue;
+   for(const [ax,ay] of around)if(ax>=1&&ax<=18&&ay>=1&&ay<=11&&m[ay][ax]==='b')edgeCandidates.add(`${ax},${ay}`);
+ }
+ for(const key of edgeCandidates){const [x,y]=key.split(',').map(Number);m[y][x]='E';}
+ // A few natural breaks in the edging act as clear entrances to side areas.
+ for(const [x,y] of pathCells){
+   if([[x+1,y],[x-1,y],[x,y+1],[x,y-1]].some(([ax,ay])=>ax>=0&&ax<20&&ay>=0&&ay<13&&m[ay][ax]==='g')){
+     for(const [ax,ay] of [[x+1,y],[x-1,y],[x,y+1],[x,y-1]])if(ax>=1&&ax<=18&&ay>=1&&ay<=11&&m[ay][ax]==='E'&&((ax*7+ay*11+i)%3===0))m[ay][ax]='b';
+   }
+ }
  // Open the two region gates and keep their approach tiles clear.
  m[6][0]='.';m[6][1]='.';m[6][18]='.';m[6][19]='.';
  return m.map(r=>r.join(''));
@@ -212,6 +229,28 @@ function drawTile(c,x,y,t,theme){
   return;
  }
  if(c==='#'){fill(q.shade,0,0,t,t);fill(q.light,3,3,25,4);fill(q.path2,2,25,27,4);return;}
+ if(c==='E'){
+  // Low pixel-art route edging: the base ground remains visible around the object.
+  drawTile('b',x,y,t,theme);
+  if(theme==='forest'||theme==='swamp'){
+   fill('#493d2e',2,13,28,7);fill('#76583b',3,10,26,5);fill('#b69a65',5,11,22,2);fill('#493d2e',5,18,4,7);fill('#493d2e',23,18,4,7);
+  }else if(theme==='beach'){
+   fill('#8c7954',2,15,28,8);fill('#c7b17c',4,11,24,7);fill('#e6d29a',7,12,18,3);fill('#8c7954',5,22,5,3);fill('#8c7954',22,22,5,3);
+  }else if(theme==='snow'){
+   fill('#7b9da3',2,16,28,7);fill('#d9eeee',3,11,26,7);fill('#f8ffff',6,12,20,3);fill('#9abcc1',8,19,16,3);
+  }else if(theme==='desert'){
+   fill('#87623c',2,17,28,7);fill('#c39a5c',3,12,26,7);fill('#e4c17e',7,13,18,3);fill('#9b7548',5,21,22,2);
+  }else if(theme==='volcano'){
+   fill('#302d30',2,16,28,8);fill('#8b6250',3,11,26,7);fill('#c17a4e',7,12,18,3);fill('#4a3a38',8,20,16,3);
+  }else if(theme==='cave'){
+   fill('#354453',2,16,28,8);fill('#788b96',3,11,26,7);fill('#b4c4c5',7,12,18,3);fill('#526574',8,20,16,3);
+  }else if(theme==='flower'){
+   fill('#526e42',2,17,28,7);fill('#a28b5d',3,12,26,7);fill('#e0c994',7,13,18,3);fill('#e89fbe',5,9,3,3);fill('#f4df83',23,9,3,3);
+  }else{
+   fill('#6b593e',2,16,28,8);fill('#b49b69',3,11,26,7);fill('#e0d0a0',7,12,18,3);fill('#6b593e',8,20,16,3);
+  }
+  return;
+ }
  if(c==='H'||c==='I'){
   // Upper half of a 2x2 village house: continuous stepped terracotta roof.
   fill('#4b513e',0,27,32,5);fill('#7e493e',0,12,32,16);fill('#a95d4b',0,7,32,10);fill('#d88b63',3,4,26,5);fill('#e5a16b',7,2,18,3);fill('#6f4039',0,25,32,3);fill('#f0c783',c==='H'?4:18,10,8,3);return;
