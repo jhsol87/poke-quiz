@@ -14,6 +14,7 @@ button{font:inherit;font-weight:700;border:3px solid var(--ink);border-radius:14
 #pi{background:var(--card);border:4px solid var(--ink);border-radius:18px;padding:14px;width:100%;max-width:460px;max-height:92vh;overflow:auto;text-align:center}
 .g{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.cell{border:2px solid var(--ink);border-radius:10px;padding:6px;font-size:14px}
 .cell i{display:block;width:30px;height:30px;border-radius:50%;margin:0 auto 4px;overflow:hidden}
+.sp{width:64px;height:64px;margin:0 auto 4px;border-radius:12px;display:flex;align-items:center;justify-content:center}.sp img{width:60px;height:60px;image-rendering:pixelated}
 .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;font-size:16px}.cal div{padding:6px 0;border-radius:8px}
 .q{font-size:30px;font-weight:800;margin:10px 0;min-height:44px}.ch{display:grid;grid-template-columns:1fr 1fr;gap:10px}.ch button{font-size:28px;padding:16px 4px;background:#fff}
 .ch button.x{opacity:.35}.big{font-size:22px;font-weight:800}
@@ -32,7 +33,7 @@ button{font:inherit;font-weight:700;border:3px solid var(--ink);border-radius:14
 <div id="pn"><div id="pi"></div></div></div>
 <script>
 (()=>{
-const T=32,VW=11,VH=9,W=24,H=14,BL='#HwcRe',$=id=>document.getElementById(id);
+const T=32,VW=11,VH=9,W=24,H=14,BL='#HwcReF',$=id=>document.getElementById(id);
 const rnd=n=>Math.floor(Math.random()*n),pick=a=>a[rnd(a.length)],sh=a=>{a=[...a];for(let i=a.length;i--;){const j=rnd(i+1);[a[i],a[j]]=[a[j],a[i]]}return a};
 const mk=(f,b)=>Array.from({length:H},(_,y)=>Array.from({length:W},(_,x)=>x==0||y==0||x==W-1||y==H-1?b:f));
 const R=(g,x,y,w,h,c)=>{for(let j=y;j<y+h;j++)for(let i=x;i<x+w;i++)g[j][i]=c};
@@ -50,6 +51,18 @@ R(g,20,3,3,6,'g');g[9][21]='p';R(g,16,8,2,1,'R');g[10][0]='<';g[5][23]='>';MP.pu
 {const g=mk('s','w');R(g,0,0,24,4,'w');R(g,5,4,3,1,'w');R(g,14,4,5,1,'w');
 R(g,13,5,9,1,'e');R(g,13,6,1,2,'e');R(g,21,6,1,2,'e');R(g,14,6,7,2,'u');R(g,15,6,3,1,'g');R(g,13,8,9,2,'c');R(g,16,8,2,2,'r');
 R(g,3,6,5,3,'g');R(g,8,11,6,2,'g');R(g,9,4,2,1,'R');R(g,13,10,1,1,'R');R(g,20,10,2,1,'R');g[9][0]='<';MP.push({n:'🏖️ 푸른 해변',base:'#f2e2a8',g})}
+MP.length=0;
+const FC={},fim=n=>FC[n]||(FC[n]=Object.assign(new Image(),{src:IMG(n)}));
+{const g=mk('.','#');R(g,1,1,22,1,'e');R(g,1,2,1,1,'e');R(g,22,2,1,1,'e');R(g,2,2,20,1,'u');R(g,5,2,4,1,'g');R(g,15,2,4,1,'f');R(g,1,3,22,1,'c');R(g,11,3,2,1,'r');
+R(g,3,5,2,2,'H');R(g,9,5,2,2,'H');R(g,15,5,2,2,'H');R(g,2,8,2,1,'F');R(g,5,8,2,1,'F');R(g,8,8,2,1,'F');R(g,11,8,2,1,'F');R(g,14,8,2,1,'F');R(g,17,8,2,1,'F');
+R(g,4,7,1,3,'p');R(g,10,7,1,3,'p');R(g,16,7,1,3,'p');R(g,1,10,22,1,'p');R(g,9,11,6,2,'P');R(g,1,4,2,1,'R');R(g,21,4,2,1,'R');
+R(g,6,6,2,1,'f');R(g,12,6,2,1,'f');R(g,18,5,3,2,'f');R(g,2,11,5,2,'g');R(g,17,11,4,2,'g');g[10][23]='>';MP.push({n:'🏘️ 초록마을',base:'#9ad870',g})}
+{const g=mk('#','#');R(g,2,3,5,4,'g');R(g,4,7,1,3,'p');R(g,1,10,22,1,'p');R(g,3,11,5,2,'g');R(g,8,8,11,2,'.');
+R(g,8,2,11,1,'e');R(g,8,3,1,3,'e');R(g,18,3,1,3,'e');R(g,9,3,9,3,'u');R(g,10,3,3,2,'g');R(g,8,6,11,2,'c');R(g,12,6,2,2,'r');
+R(g,14,11,6,1,'e');R(g,14,12,6,1,'c');R(g,20,3,3,6,'g');g[9][21]='p';R(g,16,8,2,1,'R');R(g,3,5,1,1,'m');R(g,5,6,1,1,'m');R(g,9,9,1,1,'m');R(g,14,8,1,1,'m');g[10][0]='<';g[5][23]='>';MP.push({n:'🌲 바람숲',base:'#6fae5a',g})}
+{const g=mk('s','w');R(g,0,0,24,4,'w');R(g,5,4,3,1,'w');R(g,14,4,5,1,'w');R(g,5,5,5,1,'e');R(g,5,6,5,1,'c');
+R(g,13,5,9,1,'e');R(g,13,6,1,2,'e');R(g,21,6,1,2,'e');R(g,14,6,7,2,'u');R(g,15,6,3,1,'g');R(g,13,8,9,2,'c');R(g,16,8,2,2,'r');
+R(g,3,8,5,3,'g');R(g,8,11,6,2,'g');R(g,10,4,2,1,'R');R(g,10,6,1,1,'R');R(g,13,10,1,1,'R');R(g,20,10,2,1,'R');R(g,11,9,1,1,'q');R(g,2,12,1,1,'q');R(g,19,11,1,1,'q');R(g,11,7,1,1,'q');g[9][0]='<';MP.push({n:'🏖️ 푸른 해변',base:'#f2e2a8',g})}
 const TC={n:'#bbb',f:'#f87a3c',w:'#4a8cf0',g:'#5cc65c',e:'#fdd835',i:'#80dde8',c:'#c0583c',p:'#a860c8',d:'#d8b060',y:'#a8b8f0',s:'#f06aa8',b:'#9cc633',r:'#b8a050',h:'#6a5a9c',a:'#6a50e0',k:'#6a5a5a',l:'#a8b0c0',z:'#f4a8d0'};
 const IMG=n=>'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/'+n+'.png';
 const G1='이상해씨,이상해풀,이상해꽃,파이리,리자드,리자몽,꼬부기,어니부기,거북왕,캐터피,단데기,버터플,뿔충이,딱충이,독침붕,구구,피죤,피죤투,꼬렛,래트,깨비참,깨비드릴조,아보,아보크,피카츄,라이츄,모래두지,고지,니드런♀,니드리나,니드퀸,니드런♂,니드리노,니드킹,삐삐,픽시,식스테일,나인테일,푸린,푸크린,주뱃,골뱃,뚜벅쵸,냄새꼬,라플레시아,파라스,파라섹트,콘팡,도나리,디그다,닥트리오,나옹,페르시온,고라파덕,골덕,망키,성원숭,가디,윈디,발챙이,슈륙챙이,강챙이,캐이시,윤겔라,후딘,알통몬,근육몬,괴력몬,모다피,우츠동,우츠보트,왕눈해,독파리,꼬마돌,데구리,딱구리,포니타,날쌩마,야돈,야도란,코일,레어코일,파오리,두두,두트리오,쥬쥬,쥬레곤,질퍽이,질뻐기,셀러,파르셀,고오스,고우스트,팬텀,롱스톤,슬리프,슬리퍼,크랩,킹크랩,찌리리공,붐볼,아라리,나시,탕구리,텅구리,시라소몬,홍수몬,내루미,또가스,또도가스,뿔카노,코뿌리,럭키,덩쿠리,캥카,쏘드라,시드라,콘치,왕콘치,별가사리,아쿠스타,마임맨,스라크,루주라,에레브,마그마,쁘사이저,켄타로스,잉어킹,갸라도스,라프라스,메타몽,이브이,샤미드,쥬피썬더,부스터,폴리곤,암나이트,암스타,투구,투구푸스,프테라,잠만보,프리져,썬더,파이어,미뇽,신뇽,망나뇽,뮤츠,뮤'.split(',');
@@ -106,6 +119,10 @@ else if(c=='c'){const up='ue'.includes(n(0,-1)||'#'),lo=n(0,1)!='c';f('#b08c54',
 if(up){f(UPC[m.base],0,0,16,3);f('#5a4020',0,3,16,1)}if(lo){f('#6a4c28',0,13,16,3);f('#202028',0,15,16,1)}
 if(!'cr'.includes(n(-1,0)||'#'))f('#202028',0,0,1,16);if(!'cr'.includes(n(1,0)||'#'))f('#202028',15,0,1,16)}
 else if(c=='r'){f('#d8b070',0,0,16,16);for(let i=0;i<4;i++){f('#a88040',0,i*4+3,16,1);f('#f0d090',0,i*4,16,1)}if(n(-1,0)=='c')f('#202028',0,0,1,16);if(n(1,0)=='c')f('#202028',15,0,1,16);if(n(0,-1)=='u')f('#a4dc84',0,0,16,2)}
+else if(c=='F'){f('#8a5a28',1,5,2,9);f('#8a5a28',7,5,2,9);f('#8a5a28',13,5,2,9);f('#c89858',0,7,16,2);f('#c89858',0,11,16,2);f('#5a3a18',0,9,16,1)}
+else if(c=='P'){f('#cfc6b4',0,0,16,16);f('#a8a090',0,7,16,1);f('#a8a090',7,0,1,16);f('#a8a090',0,15,16,1);f('#a8a090',15,0,1,16)}
+else if(c=='m'){f('#f0e8d0',7,9,2,4);f('#e84848',5,6,6,4);f('#fff',6,7,1,1);f('#fff',9,8,1,1);f('#202028',5,5,6,1)}
+else if(c=='q'){f('#f88838',7,5,2,8);f('#f88838',4,8,8,2);f('#ffc060',7,8,2,2)}
 else if(c=='e'){const lw=(a,b)=>!'uecr'.includes(n(a,b)||'#');if(lw(0,-1)){f('#3c5c28',0,0,16,2);f('#d8f4b0',0,2,16,1)}if(lw(-1,0)){f('#3c5c28',0,0,2,16);f('#d8f4b0',2,0,1,16)}if(lw(1,0)){f('#3c5c28',14,0,2,16);f('#d8f4b0',13,0,1,16)}}
 else if(c=='R'){f('rgba(0,0,0,.18)',3,12,10,3);f('#202028',4,4,8,1);f('#202028',3,5,10,8);f('#202028',4,13,8,1);f('#b0b0b8',4,5,8,8);f('#d8d8e0',5,6,3,2);f('#808088',4,11,8,2)}
 if(c!='c'&&n(0,-1)=='c')f('rgba(0,0,0,.25)',0,0,16,4)}
@@ -127,7 +144,7 @@ c.fillStyle='#fff';c.fillRect(X+s*.3,Y+s*.42,s*.14,s*.14);c.fillRect(X+s*.56,Y+s
 if(m.g==2){c.font=(s*.3)+'px sans-serif';c.fillText('⭐',X+s*.34,Y+s*.2)}}
 function draw(){const m=MP[P.map],cx=Math.max(0,Math.min(W-VW,P.x-5)),cy=Math.max(0,Math.min(H-VH,P.y-4));
 for(let y=0;y<VH;y++)for(let x=0;x<VW;x++)tile(m.g[cy+y][cx+x],cx+x,cy+y,x*T,y*T,m);
-if(P.buddy!=null&&prev&&prev.m==P.map)blob(ctx,(prev.x-cx)*T,(prev.y-cy)*T,T,M[P.buddy]);
+if(P.buddy!=null&&prev&&prev.m==P.map){const bx=(prev.x-cx)*T,by=(prev.y-cy)*T,bu=M[P.buddy],im=fim(bu.num);ctx.fillStyle='rgba(0,0,0,.2)';ctx.fillRect(bx+6,by+28,20,3);if(im.complete&&im.naturalWidth){ctx.imageSmoothingEnabled=false;ctx.drawImage(im,bx-4,by-10-(st%2)*2,40,40)}else blob(ctx,bx,by,T,bu)}
 const X=(P.x-cx)*T,Y=(P.y-cy)*T;ctx.fillStyle='rgba(0,0,0,.2)';ctx.fillRect(X+8,Y+28,16,3);bm([...SPR[face==2?1:face],...BODY],X,Y-(st%2)*2,face==2);
 
 $('reg').textContent=m.n;$('who').textContent='👤 '+P.name}
@@ -142,7 +159,7 @@ const pn=$('pn'),pi=$('pi');
 function panel(h){ui=true;pi.innerHTML=h+'<p><button id="cl">닫기</button></p>';pn.style.display='flex';$('cl').onclick=close}
 function close(){pn.style.display='none';pi.className='';ui=false;draw()}
 function dex(){const c=Object.values(P.dex).filter(d=>d.c).length,s=Object.keys(P.dex).length;
-panel(`<div class="big">📖 ${P.name}의 도감</div><p>만남 ${s} · 잡음 ${c} / ${M.length}</p><div class="g">${M.map(m=>{const d=P.dex[m.id];return d?`<div class="cell"><i style="background:${TC[m.t[0]]}"><img src="${IMG(m.num)}" onerror="this.remove()" style="width:30px;height:30px"></i>No.${m.num}<br>${m.n}<br>${d.c?'⭐ 잡았어요':'👀 만났어요'}</div>`:`<div class="cell"><i style="background:#999"></i>No.${m.num}<br>???</div>`}).join('')}</div>`)}
+panel(`<div class="big">📖 ${P.name}의 도감</div><p>만남 ${s} · 잡음 ${c} / ${M.length}</p><div class="g">${M.map(m=>{const d=P.dex[m.id];return `<div class="cell"><div class="sp" style="background:${d&&d.c?TC[m.t[0]]+'66':'rgba(128,128,128,.25)'}"><img src="${IMG(m.num)}" onerror="this.remove()" style="${d&&d.c?'':'filter:brightness(0)'+(d?'':';opacity:.35')}"></div>No.${m.num}<br>${d?m.n:'???'}<br>${d?(d.c?'⭐ 잡았어요':'👀 만났어요'):''}</div>`}).join('')}</div>`)}
 function att(){const d=new Date(),y=d.getFullYear(),mo=d.getMonth(),n=new Date(y,mo+1,0).getDate(),f=new Date(y,mo,1).getDay(),t=today();let h=['일','월','화','수','목','금','토'].map(s=>`<div><b>${s}</b></div>`).join('')+'<div></div>'.repeat(f);
 for(let i=1;i<=n;i++){const k=y+'-'+String(mo+1).padStart(2,'0')+'-'+String(i).padStart(2,'0');h+=`<div style="${k==t?'outline:3px solid #f90;':''}${P.att.includes(k)?'background:#7ddc7d;color:#222':''}">${i}${P.att.includes(k)?'<br>✅':''}</div>`}
 panel(`<div class="big">📅 ${P.name}의 출석</div><p>${y}년 ${mo+1}월</p><div class="cal">${h}</div><p><button id="ck" ${P.att.includes(t)?'disabled':''}>${P.att.includes(t)?'오늘 출석 완료!':'출석하기'}</button></p>`);
