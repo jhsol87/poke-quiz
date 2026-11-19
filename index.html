@@ -127,6 +127,20 @@ function makeMap(i){
   [[3,2],[4,2],[3,3],[14,8],[15,8],[16,8],[8,10],[9,10]].forEach(([x,y])=>paintBg(x,y,'C'));
   for(let y=1;y<12;y++)for(let x=1;x<19;x++)if(m[y][x]==='b'&&(x*5+y*7)%31===0)m[y][x]='^';
  }
+ // Raised landforms: connected cliff/dune/bank clusters create readable elevation,
+ // rather than isolated rock-like marks. Only untouched ground is raised.
+ const ledges=[
+  [],
+  [[2,3],[3,3],[4,3],[2,4],[3,4],[4,4],[15,7],[16,7],[15,8],[16,8]],
+  [[2,3],[3,3],[4,3],[2,4],[3,4],[15,8],[16,8],[17,8]],
+  [[2,2],[3,2],[4,2],[5,2],[2,3],[3,3],[4,3],[14,8],[15,8],[16,8],[14,9],[15,9]],
+  [[2,8],[3,8],[4,8],[2,9],[3,9],[15,3],[16,3],[17,3],[15,4],[16,4]],
+  [[5,1],[6,1],[7,1],[5,2],[6,2],[15,9],[16,9],[17,9],[15,10],[16,10]],
+  [[2,8],[3,8],[4,8],[3,9],[15,2],[16,2],[17,2],[16,3]],
+  [[2,4],[3,4],[4,4],[2,5],[3,5],[15,7],[16,7],[17,7],[16,8]],
+  [[2,8],[3,8],[4,8],[5,8],[2,9],[3,9],[14,2],[15,2],[16,2],[14,3],[15,3]]
+ ];
+ for(const [x,y] of ledges[i])if(m[y]?.[x]==='b')m[y][x]='^';
  // Add a readable border along route edges. Keep openings wherever encounter grass
  // touches the path, so children can step into the grass without searching for a gap.
  const pathCells=[];
@@ -163,7 +177,7 @@ const fallback={1:'이상해씨',2:'이상해풀',3:'이상해꽃',4:'파이리'
 async function pokemon(id){if(state.dexCache[id]&&typeof state.dexCache[id].evolved==='boolean')return state.dexCache[id];let cached;try{cached=JSON.parse(localStorage.getItem('poke_meta_'+id)||'null');}catch(e){}if(cached&&!cached.unverified&&typeof cached.evolved==='boolean'){state.dexCache[id]=cached;return cached;}try{const [pr,sr]=await Promise.all([fetch(API+'pokemon/'+id),fetch(API+'pokemon-species/'+id)]);if(!pr.ok||!sr.ok)throw Error('api');const p=await pr.json(),sp=await sr.json();const entry={id,name:sp.names?.find(n=>n.language.name==='ko')?.name||fallback[id]||p.name,types:p.types.sort((a,b)=>a.slot-b.slot).map(t=>typeKo[t.type.name]||t.type.name),height:p.height/10,weight:p.weight/10,genus:sp.genera?.find(g=>g.language.name==='ko')?.genus||'포켓몬',evolved:!!sp.evolves_from_species,rarity:MYTHICAL.includes(id)?'환상':LEGENDARY.includes(id)?'전설':sp.evolves_from_species?'진화형':'일반',sprite:p.sprites.front_default||sprite(id)};state.dexCache[id]=entry;try{localStorage.setItem('poke_meta_'+id,JSON.stringify(entry));}catch(e){}return entry;}catch(e){const entry={id,name:fallback[id]||`포켓몬 #${id}`,types:[],height:null,weight:null,genus:'정보 확인 필요',evolved:false,rarity:MYTHICAL.includes(id)?'환상':LEGENDARY.includes(id)?'전설':'일반',sprite:sprite(id),unverified:true};state.dexCache[id]=entry;return entry;}}
 const companionImages={};let follower={x:2,y:7,tx:2,ty:7,dir:'down',phase:0,last:0};
 function loadCompanion(id){if(!id){follower=null;return;}follower={x:state.player.x,y:state.player.y+1,tx:state.player.x,ty:state.player.y+1,dir:'down',phase:0,last:0};let im=companionImages[id];if(!im){im=new Image();im.onload=()=>draw();im.onerror=()=>{im.onerror=null;im.src=sprite(id);};im.src=`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/${id}.gif`;companionImages[id]=im;}}
-function drawTile(c,x,y,t,theme){
+function drawTile(c,x,y,t,theme,map){
  const px=x*t,py=y*t,seed=(x*7+y*11)%5;
  // Every tile is drawn from crisp, stepped pixel clusters rather than smooth vector shapes.
  const palettes={
@@ -231,7 +245,7 @@ function drawTile(c,x,y,t,theme){
  if(c==='#'){fill(q.shade,0,0,t,t);fill(q.light,3,3,25,4);fill(q.path2,2,25,27,4);return;}
  if(c==='E'){
   // Low pixel-art route edging: the base ground remains visible around the object.
-  drawTile('b',x,y,t,theme);
+  drawTile('b',x,y,t,theme,map);
   if(theme==='forest'||theme==='swamp'){
    fill('#493d2e',2,13,28,7);fill('#76583b',3,10,26,5);fill('#b69a65',5,11,22,2);fill('#493d2e',5,18,4,7);fill('#493d2e',23,18,4,7);
   }else if(theme==='beach'){
@@ -266,7 +280,7 @@ function drawTile(c,x,y,t,theme){
   fill('#80613e',0,9,32,4);fill('#b58b55',0,7,32,3);fill('#80613e',0,22,32,4);for(let k=3;k<32;k+=9){fill('#d3ad70',k,4,3,24);fill('#72543a',k+3,8,2,16);}return;
  }
  if(c==='T'){
-  drawTile('b',x,y,t,theme);
+  drawTile('b',x,y,t,theme,map);
   // Transparent, stepped GBA-style tree sprite: only trunk and canopy pixels are painted.
   const trunk=theme==='snow'?'#765b43':'#765039';
   const dark=theme==='snow'?'#527b78':theme==='flower'?'#386c3d':'#183f2c';
@@ -282,7 +296,7 @@ function drawTile(c,x,y,t,theme){
   return;
  }
  if(c==='o'){
-  drawTile('b',x,y,t,theme);
+  drawTile('b',x,y,t,theme,map);
   // Rock has no tile-sized backing: its irregular silhouette leaves the ground visible around it.
   const edge=theme==='snow'?'#728b8c':theme==='desert'?'#806342':theme==='cave'?'#394957':'#46534b';
   const body=theme==='snow'?'#c4d8d7':theme==='desert'?'#b69769':theme==='cave'?'#758593':'#858e83';
@@ -299,7 +313,22 @@ function drawTile(c,x,y,t,theme){
   fill('#394c68',3,7,26,23);fill('#6cc8d5',12,2,9,28);fill('#9cebf0',7,12,18,11);fill('#e3ffff',14,4,4,18);fill('#527f9c',4,26,24,4);return;
  }
  if(c==='^'){
-  fill('#626e78',1,18,30,13);fill('#7f8d98',6,10,20,10);fill('#b6c4c8',12,3,9,9);fill('#e8f2ef',14,4,4,4);return;
+  // Elevated plateau tile: pale upper surface, a highlighted rim, and a
+  // shaded vertical face on the lower edge. Neighbor checks join tiles into
+  // continuous ledges instead of rendering them as isolated boulders.
+  const up=map?.[y-1]?.[x]==='^',down=map?.[y+1]?.[x]==='^';
+  const left=map?.[y]?.[x-1]==='^',right=map?.[y]?.[x+1]==='^';
+  const top=theme==='snow'?'#f5ffff':theme==='desert'?'#e4c17f':theme==='volcano'?'#9b7768':theme==='cave'?'#9aaab1':theme==='beach'?'#e8d49d':theme==='swamp'?'#aab58a':'#8cae72';
+  const mid=theme==='snow'?'#c6dcdd':theme==='desert'?'#c39a5c':theme==='volcano'?'#725c55':theme==='cave'?'#687986':theme==='beach'?'#c6a96d':theme==='swamp'?'#788b68':'#628b57';
+  const face=theme==='snow'?'#78999e':theme==='desert'?'#91683f':theme==='volcano'?'#443a3a':theme==='cave'?'#3d4c5a':theme==='beach'?'#987b4d':theme==='swamp'?'#4e654e':'#385d3d';
+  fill(mid,0,0,32,32);fill(top,2,2,28,Math.max(12,down?28:19));
+  fill(theme==='snow'?'#ffffff':theme==='desert'?'#f0d59a':theme==='volcano'?'#c18b70':theme==='cave'?'#c2d1d1':theme==='beach'?'#fff0bd':'#b6d18a',3,3,26,3);
+  if(!down){fill(face,0,21,32,11);fill(mid,0,20,32,3);fill(face,2,27,28,3);}
+  if(!left)fill(face,0,7,3,14);
+  if(!right)fill(face,29,7,3,14);
+  // Small stepped highlights make the plateau read as a flat upper shelf.
+  fill(top,6,9,7,2);fill(theme==='snow'?'#ffffff':theme==='desert'?'#f0d59a':'#d1dfa0',20,13,5,2);
+  return;
  }
  if(c==='L'){
   fill('#332e32',0,0,32,32);fill('#a64c36',3,16,26,12);fill('#e26b37',7,11,18,10);fill('#ffc15a',12,14,8,7);fill('#f38c45',3,27,26,3);return;
@@ -312,7 +341,7 @@ function drawTile(c,x,y,t,theme){
  }
  if(c==='g'){
   // Paint the underlying biome first, then lay organic pixel clusters over it.
-  drawTile('b',x,y,t,theme);
+  drawTile('b',x,y,t,theme,map);
   if(theme==='town'){
    fill('#397442',2,22,27,7);fill('#4f8c4b',3,10,25,15);fill('#75ae59',6,7,18,15);
    fill('#d6d17c',8,9,3,3);fill('#f0c4a1',20,14,3,3);
@@ -345,7 +374,7 @@ function drawTile(c,x,y,t,theme){
   return;
  }
 }
-function draw(){let t=32;ctx.imageSmoothingEnabled=false;ctx.webkitImageSmoothingEnabled=false;ctx.mozImageSmoothingEnabled=false;ctx.clearRect(0,0,640,416);const a=areas[state.player.area],m=maps[state.player.area];for(let y=0;y<13;y++)for(let x=0;x<20;x++)drawTile(m[y][x],x,y,t,a.theme);
+function draw(){let t=32;ctx.imageSmoothingEnabled=false;ctx.webkitImageSmoothingEnabled=false;ctx.mozImageSmoothingEnabled=false;ctx.clearRect(0,0,640,416);const a=areas[state.player.area],m=maps[state.player.area];for(let y=0;y<13;y++)for(let x=0;x<20;x++)drawTile(m[y][x],x,y,t,a.theme,m);
  // Entrance markers are visually aligned with the traversable gates.
  ctx.fillStyle='#f6d36e';ctx.fillRect(0,6*t+8,5,16);ctx.fillRect(19*t+27,6*t+8,5,16);
  const p=state.player,px=p.x*t,py=p.y*t;drawAvatar(ctx,px,py,p.dir,state.data.character);
