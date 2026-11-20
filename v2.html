@@ -156,7 +156,7 @@ let P=null,prev=null,face=0,ui=false,tmr=null,AC=null;
 const key=n=>'pkq2_'+n,today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
 const load=n=>{try{const s=localStorage.getItem(key(n));if(s)return Object.assign({name:n,map:0,x:6,y:9,dex:{},buddy:null,pity:0,att:[]},JSON.parse(s),{name:n})}catch(e){}return{name:n,map:0,x:6,y:9,dex:{},buddy:null,pity:0,att:[]}};
 const save=()=>{try{localStorage.setItem(key(P.name),JSON.stringify(P))}catch(e){}};
-const snd=(f,d=.12)=>{try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();const o=AC.createOscillator(),g=AC.createGain();o.frequency.value=f;o.type='triangle';g.gain.value=.08;o.connect(g);g.connect(AC.destination);o.start();o.stop(AC.currentTime+d)}catch(e){}};
+const snd=(f,d=.12)=>{try{ensureAC();AC=ac;const o=AC.createOscillator(),g=AC.createGain();o.frequency.value=f;o.type='triangle';g.gain.value=.08;o.connect(g);g.connect(AC.destination);o.start();o.stop(AC.currentTime+d)}catch(e){}};
 // ---- draw ----
 const cv=$('cv'),ctx=cv.getContext('2d');cv.width=VW*T;cv.height=VH*T;
 const tl=(c,x,y)=>(MP[P.map].g[y]||[])[x];
@@ -302,8 +302,10 @@ const fq=n=>440*Math.pow(2,(n-69)/12);
 const nm2=(d,r,s)=>{const c=SCL[s];return r+c[(d-1)%c.length]+12*Math.floor((d-1)/c.length)};
 function tn(f,t,d,w,v){const o=ac.createOscillator(),g=ac.createGain();o.type=w;o.frequency.value=f;g.gain.setValueAtTime(v,t);g.gain.linearRampToValueAtTime(.0001,t+d);o.connect(g);g.connect(mg);o.start(t);o.stop(t+d+.05)}
 function sch(){if(!ac||cur==null||!TR[cur])return;const T=TR[cur],sd=60/T.t/2;if(nt<ac.currentTime-.5)nt=ac.currentTime+.1;
-while(nt<ac.currentTime+.3){const i=sti%32;for(const[str,oc,w,v]of[[T.m,0,T.w,T.w=='square'?.05:.09],[T.b,-12,'triangle',.11]]){const c=str[i];if(c>='1'&&c<='9'){let n=1;while(str[(i+n)%32]=='-'&&n<16)n++;tn(fq(nm2(+c,T.r+oc,T.s)),nt,n*sd*.95,w,v)}}nt+=sd;sti++}}
-function bgm(k){if(k===cur&&ti)return;cur=k;sti=0;if(!bo||k==null)return;try{if(!ac){ac=new (window.AudioContext||window.webkitAudioContext)();mg=ac.createGain();mg.gain.value=.5;mg.connect(ac.destination)}if(ac.state=='suspended')ac.resume();nt=ac.currentTime+.1;if(!ti)ti=setInterval(sch,100)}catch(e){}}
+while(nt<ac.currentTime+.3){const i=sti%32;for(const[str,oc,w,v]of[[T.m,0,T.w,T.w=='square'?.14:.24],[T.b,-12,'square',.1]]){const c=str[i];if(c>='1'&&c<='9'){let n=1;while(str[(i+n)%32]=='-'&&n<16)n++;tn(fq(nm2(+c,T.r+oc,T.s)),nt,n*sd*.95,w,v)}}nt+=sd;sti++}}
+function ensureAC(){if(!ac){ac=new (window.AudioContext||window.webkitAudioContext)();mg=ac.createGain();mg.gain.value=1;mg.connect(ac.destination)}if(ac.state!='running')ac.resume()}
+function bgm(k){if(k===cur&&ti)return;cur=k;sti=0;if(!bo||k==null)return;try{if(!ac){ac=new (window.AudioContext||window.webkitAudioContext)();mg=ac.createGain();mg.gain.value=1;mg.connect(ac.destination)}if(ac.state!='running')ac.resume();nt=ac.currentTime+.1;if(!ti)ti=setInterval(sch,100)}catch(e){}}
+let ul=0;['click','touchend','keydown'].forEach(e=>addEventListener(e,()=>{if(!ac)return;if(ac.state!='running')ac.resume();if(!ul){ul=1;try{const s=ac.createBufferSource();s.buffer=ac.createBuffer(1,1,22050);s.connect(ac.destination);s.start(0)}catch(x){}}},{passive:true}));
 {const mu=document.createElement('button');mu.id='mu';mu.textContent=bo?'🔊':'🔇';mu.className=bo?'':'off';$('bz').append(mu);mu.onclick=()=>{bo=!bo;mu.className=bo?'':'off';mu.textContent=bo?'🔊':'🔇';try{localStorage.setItem('pkq_bgm',bo?'1':'0')}catch(x){}if(bo)bgm(cur);else{clearInterval(ti);ti=null}}}
 // ---- start ----
 function start(n){P=load(n);prev=null;$('title').hidden=true;$('game').hidden=false;draw()}
